@@ -152,23 +152,29 @@ const resolvedIcons = computed(() => ({
     confirm: props.icons?.confirm ?? IconCheck,
 }));
 
-const { columns, hasHeaders, loading, error, file, hasFile, loadFile, assignField, ignoreColumn, clearColumn, toggleHeaders, validate, reset } =
-    useSheetMapper(props.fields, {
-        previewRows: props.previewRows,
-        columnLabel: (i) => msgs.value.columns.columnFallback.replace('{n}', String(i + 1)),
-        matcher: props.matcher,
-        autoIgnore: props.autoIgnore,
-        maxFileSize: props.maxFileSize,
-        maxRows: props.maxRows,
-        defaultHasHeaders: props.defaultHasHeaders,
-    });
-
-const takenKeys = computed<Set<string>>(() => {
-    const s = new Set<string>();
-    columns.value.forEach((c) => {
-        if (c.assignedKey && c.assignedKey !== 'ignore') s.add(c.assignedKey);
-    });
-    return s;
+const {
+    columns,
+    hasHeaders,
+    loading,
+    error,
+    file,
+    hasFile,
+    takenKeys,
+    loadFile,
+    assignField,
+    ignoreColumn,
+    clearColumn,
+    toggleHeaders,
+    validate,
+    reset,
+} = useSheetMapper(() => props.fields, {
+    previewRows: props.previewRows,
+    columnLabel: (i) => msgs.value.columns.columnFallback.replace('{n}', String(i + 1)),
+    matcher: props.matcher,
+    autoIgnore: props.autoIgnore,
+    maxFileSize: props.maxFileSize,
+    maxRows: props.maxRows,
+    defaultHasHeaders: props.defaultHasHeaders,
 });
 
 const errorMessage = computed(() => {

@@ -65,4 +65,22 @@ describe('autoMatch', () => {
     it('returns empty map when fields list is empty', () => {
         expect(autoMatch([col('Email')], []).size).toBe(0);
     });
+
+    it('matches a column by field key directly', () => {
+        const result = autoMatch([col('first_name')], fields);
+        expect(result.get(0)).toBe('first_name');
+    });
+
+    it('matches accent-insensitively and removes special characters', () => {
+        const customFields: SchemaField[] = [
+            { key: 'cedula', label: 'Cédula de Ciudadanía', aliases: ['número de identificación'] },
+            { key: 'descripcion', label: 'Descripción del Servicio' },
+        ];
+        const result = autoMatch(
+            [col('CÉDULA'), col('numero de identificacion'), col('DESCRIPCION')],
+            customFields
+        );
+        expect(result.get(0)).toBe('cedula');
+        expect(result.get(2)).toBe('descripcion');
+    });
 });

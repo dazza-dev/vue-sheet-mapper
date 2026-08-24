@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref, nextTick } from 'vue';
 import { useSheetMapper } from '../composables/useSheetMapper';
 import type { SchemaField, ParsedColumn } from '../types';
 
@@ -34,7 +35,8 @@ async function loadWithColumns(
     cols = parsedColumns,
     file = fakeFile(),
 ) {
-    mockParseFile.mockResolvedValueOnce(cols);
+    const clonedCols = cols.map((c) => ({ name: c.name, data: [...c.data] }));
+    mockParseFile.mockResolvedValueOnce(clonedCols);
     await mapper.loadFile(file);
 }
 
@@ -312,5 +314,98 @@ describe('useSheetMapper — reset', () => {
         mapper.toggleHeaders(); // sets to true
         mapper.reset();
         expect(mapper.hasHeaders.value).toBe(false);
+    });
+});
+
+describe('useSheetMapper — reactive schemas & computed helpers', () => {
+    beforeEach(() => mockParseFile.mockReset());
+
+    it('works with a ref of SchemaField[]', async () => {
+        const reactiveFields = ref([
+            { key: 'name', label: 'Name', required: true },
+            { key: 'email', label: 'Email', required: true },
+        ]);
+        const mapper = useSheetMapper(reactiveFields);
+        await loadWithColumns(mapper);
+
+        expect(mapper.columns.value[0].assignedKey).toBe('name');
+        expect(mapper.columns.value[1].assignedKey).toBe('email');
+        expect(mapper.columns.value[2].assignedKey).toBeNull();
+
+        expect(mapper.takenKeys.value.has('name')).toBe(true);
+        expect(mapper.takenKeys.value.has('email')).toBe(true);
+        expect(mapper.unassignedColumns.value).toHaveLength(1);
+        expect(mapper.missingRequiredFields.value).toHaveLength(0);
+        expect(mapper.isValid.value).toBe(false); // because Phone is unassigned
+
+        expect(mapper.mapping.value).toEqual({
+            0: 'name',
+            1: 'email',
+        });
+    });
+
+    it('auto-matches unassigned columns when reactive fields change asynchronously', async () => {
+        const reactiveFields = ref<SchemaField[]>([]);
+        const mapper = useSheetMapper(reactiveFields);
+        await loadWithColumns(mapper);
+
+        // Initially no fields, so all columns are unassigned
+        expect(mapper.columns.value[0].assignedKey).toBeNull();
+        expect(mapper.columns.value[1].assignedKey).toBeNull();
+        expect(mapper.columns.value[2].assignedKey).toBeNull();
+
+        // Asynchronous resolution of fields
+        reactiveFields.value = [
+            { key: 'name', label: 'Name', required: true },
+            { key: 'email', label: 'Email', required: true },
+            { key: 'phone', label: 'Phone' },
+        ];
+        await nextTick();
+
+        // Columns automatically match against newly loaded fields
+        expect(mapper.columns.value[0].assignedKey).toBe('name');
+        expect(mapper.columns.value[1].assignedKey).toBe('email');
+        expect(mapper.columns.value[2].assignedKey).toBe('phone');
+
+        expect(mapper.unassignedColumns.value).toHaveLength(0);
+        expect(mapper.missingRequiredFields.value).toHaveLength(0);
+        expect(mapper.isValid.value).toBe(true);
+        expect(mapper.mapping.value).toEqual({
+            0: 'name',
+            1: 'email',
+            2: 'phone',
+        });
+    });
+
+    it('sets all unassigned columns to ignore with ignoreUnassignedColumns', async () => {
+        const partialFields: SchemaField[] = [{ key: 'name', label: 'Name', required: true }];
+        const mapper = useSheetMapper(partialFields);
+        await loadWithColumns(mapper);
+
+        expect(mapper.unassignedColumns.value).toHaveLength(2); // Email and Phone
+        expect(mapper.isValid.value).toBe(false);
+
+        mapper.ignoreUnassignedColumns();
+
+        expect(mapper.unassignedColumns.value).toHaveLength(0);
+        expect(mapper.columns.value[1].assignedKey).toBe('ignore');
+        expect(mapper.columns.value[2].assignedKey).toBe('ignore');
+        expect(mapper.isValid.value).toBe(true);
+        expect(mapper.mapping.value).toEqual({
+            0: 'name',
+        });
+    });
+
+    it('computes missingRequiredFields correctly', async () => {
+        const strictFields: SchemaField[] = [
+            { key: 'name', label: 'Name', required: true },
+            { key: 'code', label: 'Employee Code', required: true },
+        ];
+        const mapper = useSheetMapper(strictFields);
+        await loadWithColumns(mapper);
+
+        expect(mapper.missingRequiredFields.value).toHaveLength(1);
+        expect(mapper.missingRequiredFields.value[0].key).toBe('code');
+        expect(mapper.isValid.value).toBe(false);
     });
 });

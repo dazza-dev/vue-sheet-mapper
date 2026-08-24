@@ -644,32 +644,43 @@ Or scope the override to a specific instance:
 
 ## Headless usage
 
-Use `useSheetMapper` directly when you need full control over the UI.
+Use `useSheetMapper` directly when you need full control over the UI or want to integrate with UI libraries like Vuetify, PrimeVue, Tailwind, etc.
+
+`useSheetMapper` accepts a static array, a `ref`, a `computed`, or a getter function of `SchemaField[]`. If your schema fields load asynchronously from an API or store, `useSheetMapper` will automatically re-evaluate auto-matching when the fields arrive.
 
 ```vue
 <script setup lang="ts">
+import { ref } from "vue";
 import { useSheetMapper, autoMatch, toRows } from "@dazzadev/vue-sheet-mapper";
 import type { SchemaField } from "@dazzadev/vue-sheet-mapper";
 
-const fields: SchemaField[] = [
+// Static or reactive (e.g. ref, computed, or from an API)
+const fields = ref<SchemaField[]>([
   { key: "name", label: "Name", required: true },
-  { key: "email", label: "Email", required: true },
-];
+  { key: "email", label: "Email", required: true, aliases: ["mail", "correo"] },
+  { key: "phone", label: "Phone" },
+]);
 
 const {
-  columns, // Ref<ColumnState[]>
-  hasHeaders, // Ref<boolean>
-  loading, // Ref<boolean>
-  error, // Ref<SheetMapperError | null>
-  file, // Ref<File | null>
-  hasFile, // ComputedRef<boolean>
-  loadFile, // (file: File) => Promise<void>
-  assignField, // (columnIndex: number, fieldKey: string | null) => void
-  ignoreColumn, // (columnIndex: number) => void
-  clearColumn, // (columnIndex: number) => void
-  toggleHeaders, // () => void
-  validate, // () => MappedResult[] | null
-  reset, // () => void
+  columns,                // Ref<ColumnState[]>
+  hasHeaders,             // Ref<boolean>
+  loading,                // Ref<boolean>
+  error,                  // Ref<SheetMapperError | null>
+  file,                   // Ref<File | null>
+  hasFile,                // ComputedRef<boolean>
+  takenKeys,              // ComputedRef<Set<string>>
+  unassignedColumns,      // ComputedRef<ColumnState[]>
+  missingRequiredFields,  // ComputedRef<SchemaField[]>
+  isValid,                // ComputedRef<boolean> (true when all columns mapped/ignored and required fields satisfied)
+  mapping,                // ComputedRef<Record<number, string>> (index -> fieldKey map for direct backend payloads)
+  loadFile,               // (file: File) => Promise<void>
+  assignField,            // (columnIndex: number, fieldKey: string | null) => void
+  ignoreColumn,           // (columnIndex: number) => void
+  ignoreUnassignedColumns,// () => void (sets all unassigned columns to 'ignore')
+  clearColumn,            // (columnIndex: number) => void
+  toggleHeaders,          // () => void
+  validate,               // () => MappedResult[] | null
+  reset,                  // () => void
 } = useSheetMapper(fields, {
   previewRows: 5,
   defaultHasHeaders: true,
@@ -685,12 +696,25 @@ function onFileInput(e: Event) {
   if (f) loadFile(f);
 }
 
-function submit() {
+// Option A: Client-side transformed JSON output
+function submitClientJSON() {
   const results = validate();
   if (results) {
     const rows = toRows(results);
-    console.log(rows);
+    console.log("Structured rows ready to send:", rows);
   }
+}
+
+// Option B: Direct backend import (file + mapping dictionary)
+async function submitToBackend() {
+  if (!isValid.value || !file.value) return;
+  
+  const payload = new FormData();
+  payload.append("file", file.value);
+  payload.append("mapping", JSON.stringify(mapping.value)); // e.g. { "0": "name", "1": "email" }
+  payload.append("header_row", hasHeaders.value ? "0" : "-1");
+
+  await fetch("/api/bulk-import", { method: "POST", body: payload });
 }
 </script>
 ```
@@ -731,6 +755,8 @@ After registering the plugin, `<SheetMapper>` is available globally without impo
 | `IconAlert`            | Component  | Default unassigned icon                         |
 | `IconSpinner`          | Component  | Default spinner icon                            |
 | `SchemaField`          | Type       | Field definition                                |
+| `UseSheetMapperOptions`| Type       | Options for `useSheetMapper`                    |
+| `UseSheetMapperReturn` | Type       | Return object from `useSheetMapper`             |
 | `MappedResult`         | Type       | Output entry per mapped column                  |
 | `ParsedColumn`         | Type       | Raw column from the parsed file                 |
 | `ColumnState`          | Type       | UI state per column card                        |

@@ -63,7 +63,7 @@ export async function parseFile(file: File): Promise<ParsedColumn[]> {
     }
 
     // Transpose: rows → columns
-    const maxCols = Math.max(...rows.map((r) => r.length));
+    const maxCols = rows.reduce((max, r) => Math.max(max, (r || []).length), 0);
     const columns: ParsedColumn[] = [];
 
     for (let c = 0; c < maxCols; c++) {

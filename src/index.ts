@@ -3,6 +3,7 @@ import SheetMapper from './components/SheetMapper.vue';
 
 export { SheetMapper };
 export { useSheetMapper } from './composables/useSheetMapper';
+export type { UseSheetMapperOptions, UseSheetMapperReturn } from './composables/useSheetMapper';
 export { parseFile } from './utils/parseFile';
 export { autoMatch } from './utils/autoMatch';
 export { toRows } from './utils/toRows';
