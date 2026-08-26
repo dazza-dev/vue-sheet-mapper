@@ -55,6 +55,16 @@ describe('parseFile', () => {
         expect(cols.map((c) => c.name)).toEqual(['Name', 'Email']);
     });
 
+    it('keeps the original sheet position when empty columns are dropped', async () => {
+        const file = makeFile([
+            ['Name', '', 'Email'],
+            ['Ana', '',  'ana@test.com'],
+            ['Luis', '', 'luis@test.com'],
+        ]);
+        const cols = await parseFile(file);
+        expect(cols.map((c) => c.index)).toEqual([0, 2]);
+    });
+
     it('throws INVALID_FILE_TYPE for unsupported extensions', async () => {
         const file = new File(['data'], 'report.pdf', { type: 'application/pdf' });
         await expect(parseFile(file)).rejects.toMatchObject({ code: 'INVALID_FILE_TYPE' });

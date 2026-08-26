@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue';
-import type { Ref } from 'vue';
+import { ref, shallowRef, computed, watch, toValue } from 'vue';
+import type { Ref, ComputedRef, MaybeRefOrGetter } from 'vue';
 import type { SchemaField, ColumnState, MappedResult, ParsedColumn, SheetMapperError, MatcherFn } from '../types';
 import { parseFile } from '../utils/parseFile';
 import { autoMatch } from '../utils/autoMatch';
@@ -21,18 +21,47 @@ export interface UseSheetMapperOptions {
 }
 
 export interface UseSheetMapperReturn {
+    /** Array of reactive column states for the uploaded file. */
     columns: Ref<ColumnState[]>;
+    /** Whether the first row of the file is currently treated as headers. */
     hasHeaders: Ref<boolean>;
+    /** True while a file is being read and parsed. */
     loading: Ref<boolean>;
+    /** Error state if parsing or validation failed. */
     error: Ref<SheetMapperError | null>;
+    /** The currently loaded File instance, or null. */
     file: Ref<File | null>;
-    hasFile: Ref<boolean>;
+    /** True when a file has been loaded and parsed. */
+    hasFile: ComputedRef<boolean>;
+    /** Set of schema field keys that are currently assigned to at least one column (excluding 'ignore'). */
+    takenKeys: ComputedRef<Set<string>>;
+    /** Columns that have not yet been assigned to a schema field or marked as ignored. */
+    unassignedColumns: ComputedRef<ColumnState[]>;
+    /** Schema fields marked as required: true that have not yet been assigned to any column. */
+    missingRequiredFields: ComputedRef<SchemaField[]>;
+    /** True if all columns are assigned or ignored, and all required fields are mapped. */
+    isValid: ComputedRef<boolean>;
+    /** Mapping dictionary mapping spreadsheet column index (`ColumnState.index`) to field key
+     *  (omitting ignored and unassigned columns). Not the position in the `columns` array. */
+    mapping: ComputedRef<Record<number, string>>;
+    /** Read and parse an Excel (.xlsx, .xls) or CSV file, running auto-matching against the schema. */
     loadFile: (file: File) => Promise<void>;
+    /** Assign a schema field key (or 'ignore' or null) to a column.
+     *  `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     assignField: (columnIndex: number, fieldKey: string | null) => void;
+    /** Mark a column as ignored.
+     *  `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     ignoreColumn: (columnIndex: number) => void;
+    /** Mark all currently unassigned columns as ignored in one action. */
+    ignoreUnassignedColumns: () => void;
+    /** Clear the assignment of a column back to unassigned (null).
+     *  `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     clearColumn: (columnIndex: number) => void;
+    /** Toggle whether row 1 is treated as headers or data rows. */
     toggleHeaders: () => void;
+    /** Validate the mapping. Returns MappedResult[] on success, or sets error and returns null on failure. */
     validate: () => MappedResult[] | null;
+    /** Reset state back to dropzone mode, clearing file and columns. */
     reset: () => void;
 }
 
@@ -42,14 +71,26 @@ function formatBytes(bytes: number): string {
     return `${bytes} B`;
 }
 
-export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOptions = {}): UseSheetMapperReturn {
+/**
+ * Headless composable that encapsulates all sheet parsing, column auto-matching,
+ * manual assignment, header toggling, and validation logic.
+ *
+ * Supports static arrays as well as reactive schemas (`ref`, `computed`, or getters).
+ * Automatically re-evaluates auto-matching when schema fields change or arrive asynchronously.
+ */
+export function useSheetMapper(
+    fields: MaybeRefOrGetter<SchemaField[]>,
+    options: UseSheetMapperOptions = {}
+): UseSheetMapperReturn {
     const previewRows = options.previewRows ?? 5;
     const columnLabel = options.columnLabel ?? ((i: number) => `Column ${i + 1}`);
     const matchFn: MatcherFn = options.matcher ?? autoMatch;
 
     const loading = ref(false);
     const error = ref<SheetMapperError | null>(null);
-    const file = ref<File | null>(null);
+    // shallowRef: a File is an opaque handle. Deep reactivity would hand consumers
+    // a Proxy instead of the File itself, which FormData and fetch reject.
+    const file = shallowRef<File | null>(null);
     const defaultHasHeaders = options.defaultHasHeaders ?? true;
     const hasHeaders = ref(defaultHasHeaders);
     const columns = ref<ColumnState[]>([]);
@@ -57,10 +98,15 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
     // Raw parsed columns kept so we can re-apply hasHeaders toggle
     let rawParsed: ParsedColumn[] = [];
 
+    // Columns the user explicitly assigned, ignored or cleared.
+    // Auto-matching never overwrites them.
+    const touched = new Set<number>();
+
     const hasFile = computed(() => file.value !== null);
 
     function buildColumnStates(parsed: ParsedColumn[], matches: Map<number, string>): ColumnState[] {
         return parsed.map((col, i) => ({
+            index: col.index,
             name: col.name,
             previewData: col.data.slice(0, previewRows),
             data: col.data,
@@ -108,12 +154,14 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
         file.value = f;
         hasHeaders.value = defaultHasHeaders;
 
-        const matches = matchFn(rawParsed, fields);
+        const matches = matchFn(rawParsed, toValue(fields));
         columns.value = buildColumnStates(rawParsed, matches);
+        touched.clear();
         loading.value = false;
     }
 
-    function assignField(columnIndex: number, fieldKey: string | null): void {
+    /** Internal setter: applies the assignment without marking the column as touched. */
+    function setAssignment(columnIndex: number, fieldKey: string | null): void {
         const col = columns.value[columnIndex];
         if (!col) return;
 
@@ -129,10 +177,29 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
         col.assignedKey = fieldKey;
     }
 
+    /** `columnIndex` is the position in the `columns` array — what the UI iterates —
+     *  not `ColumnState.index` (the position in the spreadsheet). */
+    function assignField(columnIndex: number, fieldKey: string | null): void {
+        if (!columns.value[columnIndex]) return;
+        touched.add(columnIndex);
+        setAssignment(columnIndex, fieldKey);
+    }
+
+    /** `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     function ignoreColumn(columnIndex: number): void {
         assignField(columnIndex, 'ignore');
     }
 
+    function ignoreUnassignedColumns(): void {
+        columns.value.forEach((col, i) => {
+            if (col.assignedKey === null) {
+                touched.add(i);
+                col.assignedKey = 'ignore';
+            }
+        });
+    }
+
+    /** `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     function clearColumn(columnIndex: number): void {
         assignField(columnIndex, null);
     }
@@ -146,7 +213,7 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
                 col.data = newData;
                 col.name = newName;
                 col.previewData = newData.slice(0, previewRows);
-                rawParsed[i] = { name: newName, data: newData };
+                rawParsed[i] = { index: rawParsed[i].index, name: newName, data: newData };
             });
             hasHeaders.value = false;
         } else {
@@ -157,15 +224,67 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
                 col.name = newName;
                 col.data = newData;
                 col.previewData = newData.slice(0, previewRows);
-                rawParsed[i] = { name: newName, data: newData };
+                rawParsed[i] = { index: rawParsed[i].index, name: newName, data: newData };
             });
             hasHeaders.value = true;
         }
     }
 
+    // Automatically re-evaluate auto-matching when fields change (e.g. async fetch from backend)
+    watch(
+        () => toValue(fields),
+        (newFields) => {
+            if (!rawParsed.length || !columns.value.length) return;
+
+            // Keys the user already decided on are off-limits to auto-matching
+            const reserved = new Set<string>();
+            columns.value.forEach((col, i) => {
+                if (touched.has(i) && col.assignedKey && col.assignedKey !== 'ignore') {
+                    reserved.add(col.assignedKey);
+                }
+            });
+
+            const matches = matchFn(rawParsed, newFields);
+            columns.value.forEach((col, i) => {
+                if (touched.has(i)) return;
+                const key = matches.get(i);
+                col.assignedKey = key && !reserved.has(key) ? key : null;
+            });
+        },
+        { deep: true }
+    );
+
+    const takenKeys = computed<Set<string>>(() => {
+        const s = new Set<string>();
+        columns.value.forEach((c) => {
+            if (c.assignedKey && c.assignedKey !== 'ignore') s.add(c.assignedKey);
+        });
+        return s;
+    });
+
+    const unassignedColumns = computed(() => columns.value.filter((c) => c.assignedKey === null));
+
+    const missingRequiredFields = computed(() =>
+        toValue(fields).filter((f) => f.required && !takenKeys.value.has(f.key))
+    );
+
+    const isValid = computed(
+        () => columns.value.length > 0 && unassignedColumns.value.length === 0 && missingRequiredFields.value.length === 0
+    );
+
+    const mapping = computed<Record<number, string>>(() => {
+        const map: Record<number, string> = {};
+        columns.value.forEach((col) => {
+            if (col.assignedKey && col.assignedKey !== 'ignore') {
+                map[col.index] = col.assignedKey;
+            }
+        });
+        return map;
+    });
+
     function validate(): MappedResult[] | null {
         // All columns must be assigned or ignored
-        const unassigned = columns.value.filter((c) => c.assignedKey === null).map((c) => c.name);
+        const unassigned = unassignedColumns.value.map((c) => c.name);
         if (unassigned.length > 0) {
             error.value = {
                 code: 'UNASSIGNED_COLUMNS',
@@ -176,10 +295,7 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
         }
 
         // All required fields must be mapped
-        const mappedKeys = new Set(
-            columns.value.filter((c) => c.assignedKey && c.assignedKey !== 'ignore').map((c) => c.assignedKey!),
-        );
-        const missing = fields.filter((f) => f.required && !mappedKeys.has(f.key)).map((f) => f.key);
+        const missing = missingRequiredFields.value.map((f) => f.key);
         if (missing.length > 0) {
             error.value = {
                 code: 'MISSING_REQUIRED_FIELDS',
@@ -203,6 +319,7 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
     function reset(): void {
         file.value = null;
         columns.value = [];
+        touched.clear();
         error.value = null;
         rawParsed = [];
         hasHeaders.value = defaultHasHeaders;
@@ -215,9 +332,15 @@ export function useSheetMapper(fields: SchemaField[], options: UseSheetMapperOpt
         error,
         file,
         hasFile,
+        takenKeys,
+        unassignedColumns,
+        missingRequiredFields,
+        isValid,
+        mapping,
         loadFile,
         assignField,
         ignoreColumn,
+        ignoreUnassignedColumns,
         clearColumn,
         toggleHeaders,
         validate,

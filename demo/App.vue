@@ -215,7 +215,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { SheetMapper, IconUpload, IconFile, IconCheck, IconBan, IconAlert } from '../src/index';
-import type { MappedResult, SchemaField, Locale, Icons, MessagesOverride, MatcherFn, TransformFn } from '../src/types';
+import type { MappedResult, MappingOutput, SchemaField, Locale, Icons, MessagesOverride, MatcherFn, TransformFn } from '../src/types';
 
 // Custom icon set — filled/solid style as a contrast to the default outlined icons
 import UploadFilledIcon from './icons/UploadFilledIcon.vue';
@@ -418,7 +418,7 @@ function onMapped(results: MappedResult[]) {
     // [{ first_name: 'Ana', email: 'ana@email.com', ... }, ...]
 }`;
 
-function onMapped(data: MappedResult[] | unknown[]) {
+function onMapped(data: MappedResult[] | MappingOutput | unknown[]) {
     if (useTransform.value) {
         result.value = null;
         transformedResult.value = data as Record<string, string>[];

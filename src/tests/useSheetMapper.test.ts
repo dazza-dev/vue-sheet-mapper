@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ref, nextTick } from 'vue';
 import { useSheetMapper } from '../composables/useSheetMapper';
 import type { SchemaField, ParsedColumn } from '../types';
 
@@ -19,9 +20,9 @@ const fields: SchemaField[] = [
 ];
 
 const parsedColumns: ParsedColumn[] = [
-    { name: 'Name',  data: ['Ana', 'Luis'] },
-    { name: 'Email', data: ['ana@mail.com', 'luis@mail.com'] },
-    { name: 'Phone', data: ['111', '222'] },
+    { index: 0, name: 'Name',  data: ['Ana', 'Luis'] },
+    { index: 1, name: 'Email', data: ['ana@mail.com', 'luis@mail.com'] },
+    { index: 2, name: 'Phone', data: ['111', '222'] },
 ];
 
 function fakeFile(name = 'test.csv', size = 100): File {
@@ -34,7 +35,8 @@ async function loadWithColumns(
     cols = parsedColumns,
     file = fakeFile(),
 ) {
-    mockParseFile.mockResolvedValueOnce(cols);
+    const clonedCols = cols.map((c) => ({ index: c.index, name: c.name, data: [...c.data] }));
+    mockParseFile.mockResolvedValueOnce(clonedCols);
     await mapper.loadFile(file);
 }
 
@@ -110,7 +112,7 @@ describe('useSheetMapper — loadFile', () => {
     });
 
     it('rejects files with more rows than maxRows', async () => {
-        const cols: ParsedColumn[] = [{ name: 'Name', data: Array(1001).fill('value') }];
+        const cols: ParsedColumn[] = [{ index: 0, name: 'Name', data: Array(1001).fill('value') }];
         const mapper = useSheetMapper(fields, { maxRows: 1000 });
         mockParseFile.mockResolvedValueOnce(cols);
         await mapper.loadFile(fakeFile());
@@ -120,7 +122,7 @@ describe('useSheetMapper — loadFile', () => {
     });
 
     it('accepts files within maxRows', async () => {
-        const cols: ParsedColumn[] = [{ name: 'Name', data: Array(500).fill('value') }];
+        const cols: ParsedColumn[] = [{ index: 0, name: 'Name', data: Array(500).fill('value') }];
         const mapper = useSheetMapper(fields, { maxRows: 1000 });
         mockParseFile.mockResolvedValueOnce(cols);
         await mapper.loadFile(fakeFile());
@@ -138,8 +140,8 @@ describe('useSheetMapper — loadFile', () => {
 
     it('sets unmatched columns to ignore when autoIgnore is true', async () => {
         const cols: ParsedColumn[] = [
-            { name: 'Name',    data: ['Ana'] },
-            { name: 'Unknown', data: ['x'] },
+            { index: 0, name: 'Name',    data: ['Ana'] },
+            { index: 1, name: 'Unknown', data: ['x'] },
         ];
         const mapper = useSheetMapper(fields, { autoIgnore: true });
         await loadWithColumns(mapper, cols);
@@ -271,8 +273,8 @@ describe('useSheetMapper — toggleHeaders', () => {
 
     it('promotes first data row to header when toggling on', async () => {
         const cols: ParsedColumn[] = [
-            { name: '', data: ['Name', 'Ana', 'Luis'] },
-            { name: '', data: ['Email', 'ana@mail.com', 'luis@mail.com'] },
+            { index: 0, name: '', data: ['Name', 'Ana', 'Luis'] },
+            { index: 1, name: '', data: ['Email', 'ana@mail.com', 'luis@mail.com'] },
         ];
         const mapper = useSheetMapper(fields, { defaultHasHeaders: false });
         mockParseFile.mockResolvedValueOnce(cols);
@@ -312,5 +314,189 @@ describe('useSheetMapper — reset', () => {
         mapper.toggleHeaders(); // sets to true
         mapper.reset();
         expect(mapper.hasHeaders.value).toBe(false);
+    });
+});
+
+describe('useSheetMapper — reactive schemas & computed helpers', () => {
+    beforeEach(() => mockParseFile.mockReset());
+
+    it('works with a ref of SchemaField[]', async () => {
+        const reactiveFields = ref([
+            { key: 'name', label: 'Name', required: true },
+            { key: 'email', label: 'Email', required: true },
+        ]);
+        const mapper = useSheetMapper(reactiveFields);
+        await loadWithColumns(mapper);
+
+        expect(mapper.columns.value[0].assignedKey).toBe('name');
+        expect(mapper.columns.value[1].assignedKey).toBe('email');
+        expect(mapper.columns.value[2].assignedKey).toBeNull();
+
+        expect(mapper.takenKeys.value.has('name')).toBe(true);
+        expect(mapper.takenKeys.value.has('email')).toBe(true);
+        expect(mapper.unassignedColumns.value).toHaveLength(1);
+        expect(mapper.missingRequiredFields.value).toHaveLength(0);
+        expect(mapper.isValid.value).toBe(false); // because Phone is unassigned
+
+        expect(mapper.mapping.value).toEqual({
+            0: 'name',
+            1: 'email',
+        });
+    });
+
+    it('auto-matches unassigned columns when reactive fields change asynchronously', async () => {
+        const reactiveFields = ref<SchemaField[]>([]);
+        const mapper = useSheetMapper(reactiveFields);
+        await loadWithColumns(mapper);
+
+        // Initially no fields, so all columns are unassigned
+        expect(mapper.columns.value[0].assignedKey).toBeNull();
+        expect(mapper.columns.value[1].assignedKey).toBeNull();
+        expect(mapper.columns.value[2].assignedKey).toBeNull();
+
+        // Asynchronous resolution of fields
+        reactiveFields.value = [
+            { key: 'name', label: 'Name', required: true },
+            { key: 'email', label: 'Email', required: true },
+            { key: 'phone', label: 'Phone' },
+        ];
+        await nextTick();
+
+        // Columns automatically match against newly loaded fields
+        expect(mapper.columns.value[0].assignedKey).toBe('name');
+        expect(mapper.columns.value[1].assignedKey).toBe('email');
+        expect(mapper.columns.value[2].assignedKey).toBe('phone');
+
+        expect(mapper.unassignedColumns.value).toHaveLength(0);
+        expect(mapper.missingRequiredFields.value).toHaveLength(0);
+        expect(mapper.isValid.value).toBe(true);
+        expect(mapper.mapping.value).toEqual({
+            0: 'name',
+            1: 'email',
+            2: 'phone',
+        });
+    });
+
+    it('sets all unassigned columns to ignore with ignoreUnassignedColumns', async () => {
+        const partialFields: SchemaField[] = [{ key: 'name', label: 'Name', required: true }];
+        const mapper = useSheetMapper(partialFields);
+        await loadWithColumns(mapper);
+
+        expect(mapper.unassignedColumns.value).toHaveLength(2); // Email and Phone
+        expect(mapper.isValid.value).toBe(false);
+
+        mapper.ignoreUnassignedColumns();
+
+        expect(mapper.unassignedColumns.value).toHaveLength(0);
+        expect(mapper.columns.value[1].assignedKey).toBe('ignore');
+        expect(mapper.columns.value[2].assignedKey).toBe('ignore');
+        expect(mapper.isValid.value).toBe(true);
+        expect(mapper.mapping.value).toEqual({
+            0: 'name',
+        });
+    });
+
+    it('never re-assigns a key the user already placed on another column', async () => {
+        const cols: ParsedColumn[] = [
+            { index: 0, name: 'Name',     data: ['Ana'] },
+            { index: 1, name: 'Contacto', data: ['a@a.com'] },
+            { index: 2, name: 'Email',    data: ['b@b.com'] },
+        ];
+        const reactiveFields = ref<SchemaField[]>([{ key: 'name', label: 'Name' }]);
+        const mapper = useSheetMapper(reactiveFields);
+        await loadWithColumns(mapper, cols);
+
+        // The user maps "Contacto" by hand before the email field exists
+        mapper.assignField(1, 'email');
+
+        reactiveFields.value = [
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+        ];
+        await nextTick();
+
+        const assigned = mapper.columns.value.map((c) => c.assignedKey);
+        expect(assigned.filter((k) => k === 'email')).toHaveLength(1);
+        expect(assigned).toEqual(['name', 'email', null]);
+    });
+
+    it('does not revert a cleared column when the fields array changes identity', async () => {
+        const version = ref(0);
+        const mapper = useSheetMapper(() => {
+            void version.value; // a fresh array on every re-evaluation, same keys
+            return [
+                { key: 'name', label: 'Name' },
+                { key: 'email', label: 'Email' },
+                { key: 'phone', label: 'Phone' },
+            ];
+        });
+        await loadWithColumns(mapper);
+        expect(mapper.columns.value[0].assignedKey).toBe('name');
+
+        mapper.clearColumn(0);
+        expect(mapper.columns.value[0].assignedKey).toBeNull();
+
+        version.value++; // parent re-render hands over a new array
+        await nextTick();
+
+        expect(mapper.columns.value[0].assignedKey).toBeNull();
+    });
+
+    it('clears a column whose field was removed from the schema', async () => {
+        const reactiveFields = ref<SchemaField[]>([
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'phone', label: 'Phone' },
+        ]);
+        const mapper = useSheetMapper(reactiveFields);
+        await loadWithColumns(mapper);
+        expect(mapper.columns.value[2].assignedKey).toBe('phone');
+
+        reactiveFields.value = [
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+        ];
+        await nextTick();
+
+        expect(mapper.columns.value[2].assignedKey).toBeNull();
+        expect(mapper.mapping.value).toEqual({ 0: 'name', 1: 'email' });
+    });
+
+    it('loading a second file resets the touched columns', async () => {
+        const reactiveFields = ref<SchemaField[]>([
+            { key: 'name', label: 'Name' },
+            { key: 'email', label: 'Email' },
+            { key: 'phone', label: 'Phone' },
+        ]);
+        const mapper = useSheetMapper(reactiveFields);
+
+        await loadWithColumns(mapper, parsedColumns, fakeFile('a.csv'));
+        mapper.clearColumn(0); // column 0 is now touched for file A
+
+        await loadWithColumns(mapper, parsedColumns, fakeFile('b.csv'));
+        expect(mapper.columns.value[0].assignedKey).toBe('name');
+
+        // With `touched` reset, column 0 is auto-matched again — and therefore
+        // cleared when its field leaves the schema.
+        reactiveFields.value = [
+            { key: 'email', label: 'Email' },
+            { key: 'phone', label: 'Phone' },
+        ];
+        await nextTick();
+
+        expect(mapper.columns.value[0].assignedKey).toBeNull();
+    });
+
+    it('computes missingRequiredFields correctly', async () => {
+        const strictFields: SchemaField[] = [
+            { key: 'name', label: 'Name', required: true },
+            { key: 'code', label: 'Employee Code', required: true },
+        ];
+        const mapper = useSheetMapper(strictFields);
+        await loadWithColumns(mapper);
+
+        expect(mapper.missingRequiredFields.value).toHaveLength(1);
+        expect(mapper.missingRequiredFields.value[0].key).toBe('code');
+        expect(mapper.isValid.value).toBe(false);
     });
 });

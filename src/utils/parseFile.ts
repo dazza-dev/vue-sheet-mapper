@@ -63,7 +63,7 @@ export async function parseFile(file: File): Promise<ParsedColumn[]> {
     }
 
     // Transpose: rows → columns
-    const maxCols = Math.max(...rows.map((r) => r.length));
+    const maxCols = rows.reduce((max, r) => Math.max(max, r.length), 0);
     const columns: ParsedColumn[] = [];
 
     for (let c = 0; c < maxCols; c++) {
@@ -74,7 +74,7 @@ export async function parseFile(file: File): Promise<ParsedColumn[]> {
         // Drop columns where every data cell is empty
         if (data.every((v) => v === '')) continue;
 
-        columns.push({ name, data });
+        columns.push({ index: c, name, data });
     }
 
     if (columns.length === 0) {

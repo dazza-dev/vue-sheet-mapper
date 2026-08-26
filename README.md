@@ -7,9 +7,11 @@ A Vue 3 component that lets users map columns from an Excel or CSV file to a sch
 ## Features
 
 - **Excel & CSV** — supports `.xlsx`, `.xls`, and `.csv`
-- **Auto-match** — maps columns to fields by label or aliases (accent-insensitive)
+- **Auto-match** — maps columns to fields by key, label or aliases (accent-insensitive)
+- **Reactive schemas** — pass a `ref`, `computed` or getter; fields can arrive from your API after the file is picked
 - **Preview** — shows the first N data rows per column while the user maps
 - **Validation** — enforces required fields and ensures every column is assigned or ignored
+- **Two output modes** — the mapped rows, or the raw file plus a mapping dictionary for server-side imports
 - **i18n** — 5 built-in locales (en, es, fr, pt, nl) with per-key overrides
 - **Customizable icons** — replace any icon with your own Vue component
 - **Custom matcher** — replace the auto-match algorithm entirely
@@ -78,11 +80,13 @@ function onMapped(results: MappedResult[]) {
   <SheetMapper
     :fields="fields"
     locale="en"
-    @mapped="onMapped"
+    @mapped="(results) => onMapped(results as MappedResult[])"
     @error="(e) => console.error(e)"
   />
 </template>
 ```
+
+> `@mapped` is typed as the union of everything it can carry (`MappedResult[] | MappingOutput | unknown[]`), because `transform` and `output` change its shape. TypeScript can't narrow it from the props, so cast it to the shape you configured — as above.
 
 ---
 
@@ -94,8 +98,9 @@ function onMapped(results: MappedResult[]) {
 | `locale`            | `'en' \| 'es' \| 'fr' \| 'pt' \| 'nl'` | `'en'`  | UI language.                                                                                                 |
 | `messages`          | `MessagesOverride`                     | —       | Override individual strings for the active locale.                                                           |
 | `icons`             | `Icons`                                | —       | Replace any default icon with your own component.                                                            |
-| `matcher`           | `MatcherFn`                            | —       | Custom auto-match function. Replaces the built-in label/alias matcher.                                       |
-| `transform`         | `TransformFn`                          | —       | Convert each data row before `@mapped` fires. Return `null` to exclude a row.                                |
+| `matcher`           | `MatcherFn`                            | —       | Custom auto-match function. Replaces the built-in key/label/alias matcher.                                   |
+| `output`            | `'rows' \| 'mapping'`                  | `'rows'`| What `@mapped` emits. `'rows'` sends the mapped column data; `'mapping'` sends `{ file, mapping, hasHeaders }` so your backend does the reading. `transform` is ignored when `'mapping'`. |
+| `transform`         | `TransformFn`                          | —       | Convert each data row before `@mapped` fires. Return `null` to exclude a row. Ignored when `output` is `'mapping'`. |
 | `previewRows`       | `number`                               | `5`     | How many data rows to show in each column card.                                                              |
 | `defaultHasHeaders` | `boolean`                              | `true`  | Whether the first row is treated as a header on load and after reset.                                        |
 | `autoIgnore`        | `boolean`                              | `false` | Automatically set unmatched columns to "ignore" after auto-matching.                                         |
@@ -109,7 +114,7 @@ function onMapped(results: MappedResult[]) {
 
 | Event             | Payload                                           | Description                                                                                                                       |
 | ----------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `@mapped`         | `MappedResult[] \| unknown[]`                     | Emitted after successful validation. Returns `MappedResult[]` by default, or the output of your `transform` function if provided. |
+| `@mapped`         | `MappedResult[] \| MappingOutput \| unknown[]`    | Emitted after successful validation. `MappedResult[]` by default, the output of your `transform` function if provided, or a `MappingOutput` when `output="mapping"`. |
 | `@error`          | `SheetMapperError`                                | Emitted when a file or validation error occurs.                                                                                   |
 | `@file-picked`    | `File`                                            | Emitted immediately when the user selects a file, before parsing.                                                                 |
 | `@columns-loaded` | `{ name: string; assignedKey: string \| null }[]` | Emitted after the file is parsed and columns are shown. Includes the detected column names and their initial auto-match result.   |
@@ -211,6 +216,43 @@ interface SchemaField {
 }
 ```
 
+### Two kinds of column index
+
+Two different numbers travel through the library. Mixing them up corrupts an import, so they are named apart:
+
+| | What it is | Where you see it |
+| --- | --- | --- |
+| **Position in the `columns` array** | The n-th card the user sees | `assignField`, `ignoreColumn`, `clearColumn`, and the keys of the `Map` a `MatcherFn` returns |
+| **`index`** | The 0-based position of the column in the actual spreadsheet | `ParsedColumn.index`, `ColumnState.index`, and the keys of `mapping` |
+
+They differ because **a column whose data cells are all empty is dropped**: it never shows up in the UI, but it still occupies its position in the file. A sheet with `A=Description`, `B=Notes` (blank), `C=Price` produces two columns whose `index` values are `0` and `2` — so anything you send to a backend that will re-read the file stays aligned with it.
+
+### `ParsedColumn`
+
+One column as returned by `parseFile`.
+
+```typescript
+interface ParsedColumn {
+  index: number; // 0-based position in the source spreadsheet — stable when empty columns are dropped
+  name: string; // value of the first row (the header, when the file has one)
+  data: string[]; // all rows below the header
+}
+```
+
+### `ColumnState`
+
+The state of one column card in the mapper UI.
+
+```typescript
+interface ColumnState {
+  index: number; // 0-based position in the source spreadsheet — this is what `mapping` sends
+  name: string; // column name from the file (or "Column 1" when the file has no headers)
+  previewData: string[]; // the first `previewRows` rows, shown in the card
+  data: string[]; // all rows in this column
+  assignedKey: string | null; // schema field key, null = unassigned, 'ignore' = skipped
+}
+```
+
 ### `MappedResult`
 
 One entry in the `@mapped` output (when no `transform` is provided).
@@ -220,6 +262,18 @@ interface MappedResult {
   field: string; // the SchemaField.key this column was mapped to
   columnName: string; // the original column name from the file
   data: string[]; // all data rows for this column (header row excluded)
+}
+```
+
+### `MappingOutput`
+
+The `@mapped` payload when `output="mapping"`.
+
+```typescript
+interface MappingOutput {
+  file: File; // the original, untransformed File
+  mapping: Record<number, string>; // spreadsheet column index → schema field key
+  hasHeaders: boolean; // whether row 1 of the file is a header row
 }
 ```
 
@@ -255,6 +309,8 @@ type MatcherFn = (
   fields: SchemaField[],
 ) => Map<number, string>; // Map<columnIndex, fieldKey>
 ```
+
+The keys of the returned `Map` are **positions in the `columns` array it receives** — not `ParsedColumn.index`. Return `0` for the first column you were handed, whatever its position in the spreadsheet.
 
 ### `TransformFn`
 
@@ -411,7 +467,9 @@ import {
 
 ## Custom matcher
 
-The built-in auto-matcher normalizes column names (lowercase, no accents, alphanumeric only) and does an exact comparison against each field's `label` and `aliases`. To replace it entirely, pass a `matcher` function.
+The built-in auto-matcher normalizes column names (lowercase, no accents, alphanumeric only) and does an exact comparison against each field's `key`, `label` and `aliases`. To replace it entirely, pass a `matcher` function.
+
+> The keys of the `Map` you return are positions in the `columns` array you received, not `ParsedColumn.index`.
 
 ```typescript
 import type { MatcherFn } from "@dazzadev/vue-sheet-mapper";
@@ -482,11 +540,13 @@ Use `transform` to receive row-oriented data instead:
 ```typescript
 import type { TransformFn } from "@dazzadev/vue-sheet-mapper";
 
-const contactTransform: TransformFn<{
+type Contact = {
   full_name: string;
   email: string;
   phone: string;
-}> = (row) => {
+};
+
+const contactTransform: TransformFn<Contact> = (row) => {
   if (!row.first_name) return null; // skip empty rows
   return {
     full_name: `${row.first_name.trim()} ${row.last_name?.trim() ?? ""}`.trim(),
@@ -494,21 +554,18 @@ const contactTransform: TransformFn<{
     phone: row.phone?.replace(/\D/g, "") ?? "",
   };
 };
+
+function onMapped(rows: Contact[]) {
+  // [{ full_name: 'Ana García', email: 'ana@mail.com', phone: '3001234567' }, ...]
+}
 ```
 
 ```vue
 <SheetMapper
   :fields="fields"
   :transform="contactTransform"
-  @mapped="onMapped"
+  @mapped="(rows) => onMapped(rows as Contact[])"
 />
-```
-
-```typescript
-// output with transform
-function onMapped(rows: unknown[]) {
-  // [{ full_name: 'Ana García', email: 'ana@mail.com', phone: '3001234567' }, ...]
-}
 ```
 
 ### Manual row conversion
@@ -524,6 +581,55 @@ function onMapped(results: MappedResult[]) {
   // [{ first_name: 'Ana', email: 'ana@mail.com' }, ...]
 }
 ```
+
+---
+
+## Output modes
+
+`output` decides what `@mapped` hands you.
+
+### `output="rows"` (default)
+
+`@mapped` emits `MappedResult[]` — or the result of your `transform`, if you passed one. The file is read in the browser and the values travel as JSON.
+
+### `output="mapping"`
+
+`@mapped` emits a `MappingOutput`: the original `File`, the mapping dictionary, and whether row 1 is a header. Nothing is materialized into row objects, which is what you want when the file has thousands of rows and your backend is going to read it anyway.
+
+```vue
+<script setup lang="ts">
+import { SheetMapper } from "@dazzadev/vue-sheet-mapper";
+import type { MappingOutput, SchemaField } from "@dazzadev/vue-sheet-mapper";
+
+const fields: SchemaField[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "email", label: "Email", required: true },
+];
+
+async function onMapped(payload: MappingOutput) {
+  // payload.file      -> the File the user picked, untouched
+  // payload.mapping   -> { 0: 'name', 2: 'email' }  (spreadsheet column index -> field key)
+  // payload.hasHeaders-> true
+  await sendToMyBackend(payload);
+}
+</script>
+
+<template>
+  <SheetMapper
+    :fields="fields"
+    output="mapping"
+    @mapped="(payload) => onMapped(payload as MappingOutput)"
+  />
+</template>
+```
+
+The library never issues a request and never builds a `FormData` — the payload is three primitives (a `File`, a `Record<number, string>` and a boolean), so it works against any backend, in any language. You decide the parameter names and the wire format.
+
+`transform` is ignored in this mode: the two are mutually exclusive, since nothing is converted into rows.
+
+Validation still runs before `@mapped` fires, so unassigned columns and missing required fields raise `@error` exactly as in `'rows'` mode.
+
+> The `mapping` keys are **spreadsheet column indexes**, not positions in the `columns` array — see [Two kinds of column index](#two-kinds-of-column-index). A column whose data cells are all empty is hidden from the UI but does **not** shift the indexes your backend receives.
 
 ---
 
@@ -644,32 +750,54 @@ Or scope the override to a specific instance:
 
 ## Headless usage
 
-Use `useSheetMapper` directly when you need full control over the UI.
+Use `useSheetMapper` directly when you need full control over the UI or want to integrate with UI libraries like Vuetify, PrimeVue, Tailwind, etc.
+
+```typescript
+function useSheetMapper(
+  fields: MaybeRefOrGetter<SchemaField[]>,
+  options?: UseSheetMapperOptions,
+): UseSheetMapperReturn;
+```
+
+### Reactive schemas
+
+`fields` is a `MaybeRefOrGetter<SchemaField[]>`, so a static array, a `ref`, a `computed` and a getter function all work. If your schema loads asynchronously from an API or a store, auto-matching re-runs on its own when the fields arrive — the user can pick their file first and the columns get matched as soon as the schema lands.
+
+Re-matching never overwrites a decision the user already made. Any column they assigned, ignored or cleared by hand is left untouched, and its field key is taken out of play so no other column can be auto-matched to it. Columns the user has not touched are re-derived from scratch, which means a field that **disappears** from the schema also clears the column that held it.
 
 ```vue
 <script setup lang="ts">
+import { ref } from "vue";
 import { useSheetMapper, autoMatch, toRows } from "@dazzadev/vue-sheet-mapper";
 import type { SchemaField } from "@dazzadev/vue-sheet-mapper";
 
-const fields: SchemaField[] = [
+// Static or reactive (e.g. ref, computed, or from an API)
+const fields = ref<SchemaField[]>([
   { key: "name", label: "Name", required: true },
-  { key: "email", label: "Email", required: true },
-];
+  { key: "email", label: "Email", required: true, aliases: ["mail", "correo"] },
+  { key: "phone", label: "Phone" },
+]);
 
 const {
-  columns, // Ref<ColumnState[]>
-  hasHeaders, // Ref<boolean>
-  loading, // Ref<boolean>
-  error, // Ref<SheetMapperError | null>
-  file, // Ref<File | null>
-  hasFile, // ComputedRef<boolean>
-  loadFile, // (file: File) => Promise<void>
-  assignField, // (columnIndex: number, fieldKey: string | null) => void
-  ignoreColumn, // (columnIndex: number) => void
-  clearColumn, // (columnIndex: number) => void
-  toggleHeaders, // () => void
-  validate, // () => MappedResult[] | null
-  reset, // () => void
+  columns,                // Ref<ColumnState[]>
+  hasHeaders,             // Ref<boolean>
+  loading,                // Ref<boolean>
+  error,                  // Ref<SheetMapperError | null>
+  file,                   // Ref<File | null>
+  hasFile,                // ComputedRef<boolean>
+  takenKeys,              // ComputedRef<Set<string>>
+  unassignedColumns,      // ComputedRef<ColumnState[]>
+  missingRequiredFields,  // ComputedRef<SchemaField[]>
+  isValid,                // ComputedRef<boolean> (true when all columns mapped/ignored and required fields satisfied)
+  mapping,                // ComputedRef<Record<number, string>> (spreadsheet column index -> fieldKey)
+  loadFile,               // (file: File) => Promise<void>
+  assignField,            // (columnIndex: number, fieldKey: string | null) => void — columnIndex is the position in `columns`
+  ignoreColumn,           // (columnIndex: number) => void — position in `columns`
+  ignoreUnassignedColumns,// () => void (sets all unassigned columns to 'ignore')
+  clearColumn,            // (columnIndex: number) => void — position in `columns`
+  toggleHeaders,          // () => void
+  validate,               // () => MappedResult[] | null
+  reset,                  // () => void
 } = useSheetMapper(fields, {
   previewRows: 5,
   defaultHasHeaders: true,
@@ -685,15 +813,37 @@ function onFileInput(e: Event) {
   if (f) loadFile(f);
 }
 
-function submit() {
+// Option A: Client-side transformed JSON output
+function submitClientJSON() {
   const results = validate();
   if (results) {
     const rows = toRows(results);
-    console.log(rows);
+    console.log("Structured rows ready to send:", rows);
   }
+}
+
+// Option B: Direct backend import (file + mapping dictionary)
+// Example against a Laravel backend — `header_row` is PhpSpreadsheet's own naming.
+// The pieces the library gives you are plain primitives (a File, a
+// Record<number, string> and a boolean), so shape the request however your
+// backend wants it: Node, Go, Rails, a presigned upload — the library never
+// issues a request itself.
+async function submitToBackend() {
+  if (!isValid.value || !file.value) return;
+
+  const payload = new FormData();
+  payload.append("file", file.value);
+  payload.append("mapping", JSON.stringify(mapping.value)); // e.g. { "0": "name", "2": "email" }
+  payload.append("header_row", hasHeaders.value ? "0" : "-1");
+
+  await fetch("/api/bulk-import", { method: "POST", body: payload });
 }
 </script>
 ```
+
+> `mapping` is keyed by the **spreadsheet column index**, not by the position in the `columns` array — see [Two kinds of column index](#two-kinds-of-column-index). Entirely empty columns are hidden from the UI but keep the remaining indexes aligned with the file your backend re-reads.
+
+The `<SheetMapper>` component exposes the same payload without going headless — see [`output="mapping"`](#outputmapping).
 
 ---
 
@@ -731,7 +881,10 @@ After registering the plugin, `<SheetMapper>` is available globally without impo
 | `IconAlert`            | Component  | Default unassigned icon                         |
 | `IconSpinner`          | Component  | Default spinner icon                            |
 | `SchemaField`          | Type       | Field definition                                |
+| `UseSheetMapperOptions`| Type       | Options for `useSheetMapper`                    |
+| `UseSheetMapperReturn` | Type       | Return object from `useSheetMapper`             |
 | `MappedResult`         | Type       | Output entry per mapped column                  |
+| `MappingOutput`        | Type       | `@mapped` payload when `output="mapping"`       |
 | `ParsedColumn`         | Type       | Raw column from the parsed file                 |
 | `ColumnState`          | Type       | UI state per column card                        |
 | `SheetMapperError`     | Type       | Error object                                    |

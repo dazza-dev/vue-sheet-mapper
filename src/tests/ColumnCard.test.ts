@@ -15,6 +15,7 @@ const fields: SchemaField[] = [
 
 function col(overrides: Partial<ColumnState> = {}): ColumnState {
     return {
+        index: 0,
         name: 'Name',
         assignedKey: null,
         data: ['Ana', 'Luis'],
