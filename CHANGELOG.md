@@ -5,6 +5,20 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] — 2026-08-26
+
+No code changes — the published package is identical to 2.0.0.
+
+### Fixed
+
+- **The README images were broken on npm.** They used paths relative to the
+  repository, which npmjs.com cannot resolve because it does not serve repo
+  files. They are absolute URLs now.
+- **`package.json` was missing `repository`, `homepage`, `bugs` and `author`**,
+  so the npm page had no link back to the source, the demo or the issue
+  tracker — and npm had no repository to resolve relative links against in the
+  first place.
+
 ## [2.0.0] — 2026-08-26
 
 A major release: the schema can now be reactive, the component can hand you the
@@ -104,5 +118,6 @@ The 2.0.0 reactive-schema and headless-helper work started as a contribution fro
 [@partprogramming09](https://github.com/partprogramming09) in
 [#1](https://github.com/dazza-dev/vue-sheet-mapper/pull/1).
 
+[2.0.1]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v2.0.1
 [2.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v2.0.0
 [1.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v1.0.0

@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="demo/public/logo-wordmark-dark.svg">
-    <img src="demo/public/logo-wordmark.svg" alt="vue-sheet-mapper" width="340">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dazza-dev/vue-sheet-mapper/main/demo/public/logo-wordmark-dark.svg">
+    <img src="https://raw.githubusercontent.com/dazza-dev/vue-sheet-mapper/main/demo/public/logo-wordmark.svg" alt="vue-sheet-mapper" width="340">
   </picture>
 </p>
 
@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <img src="demo/public/screenshot.png" alt="Column mapping screen: each spreadsheet column is a card with a data preview — matched columns in green, an ignored column in orange, and an unmatched one waiting for the user to pick a field" width="900">
+  <img src="https://raw.githubusercontent.com/dazza-dev/vue-sheet-mapper/main/demo/public/screenshot.png" alt="Column mapping screen: each spreadsheet column is a card with a data preview — matched columns in green, an ignored column in orange, and an unmatched one waiting for the user to pick a field" width="900">
 </p>
 
 ## Features
