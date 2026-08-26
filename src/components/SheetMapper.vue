@@ -97,8 +97,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import type { SchemaField, MappedResult, Locale, MessagesOverride, Icons, MatcherFn, TransformFn } from '../types';
+import { computed } from 'vue';
+import type { SchemaField, MappedResult, MappingOutput, Locale, MessagesOverride, Icons, MatcherFn, TransformFn } from '../types';
 import { toRows } from '../utils/toRows';
 import { useSheetMapper } from '../composables/useSheetMapper';
 import { getMessages } from '../i18n';
@@ -125,15 +125,22 @@ const props = withDefaults(
         maxFileSize?: number;
         maxRows?: number;
         defaultHasHeaders?: boolean;
+        /** What `@mapped` emits: the row-oriented results ('rows', default), or the raw
+         *  file plus the mapping dictionary ('mapping'). Ignores `transform` when 'mapping'. */
+        output?: 'rows' | 'mapping';
     }>(),
     {
         previewRows: 5,
         locale: 'en',
+        output: 'rows',
+        // Vue casts an absent Boolean prop to false, so this has to be explicit —
+        // otherwise the mapper always starts in "no headers" mode.
+        defaultHasHeaders: true,
     },
 );
 
 const emit = defineEmits<{
-    mapped: [results: MappedResult[] | unknown[]];
+    mapped: [results: MappedResult[] | MappingOutput | unknown[]];
     error: [error: import('../types').SheetMapperError];
     'file-picked': [file: File];
     'columns-loaded': [columns: { name: string; assignedKey: string | null }[]];
@@ -160,6 +167,7 @@ const {
     file,
     hasFile,
     takenKeys,
+    mapping,
     loadFile,
     assignField,
     ignoreColumn,
@@ -223,6 +231,16 @@ function handleValidate() {
         if (error.value) emit('error', error.value);
         return;
     }
+
+    if (props.output === 'mapping') {
+        emit('mapped', {
+            file: file.value!,
+            mapping: mapping.value,
+            hasHeaders: hasHeaders.value,
+        });
+        return;
+    }
+
     if (props.transform) {
         const rows = toRows(results);
         const transformed = rows.map(props.transform).filter((r): r is NonNullable<typeof r> => r !== null);
@@ -231,11 +249,6 @@ function handleValidate() {
         emit('mapped', results);
     }
 }
-
-watch(
-    () => props.fields.map((f) => f.key).join(','),
-    () => reset(),
-);
 </script>
 
 <style>

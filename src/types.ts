@@ -54,6 +54,16 @@ export interface MappedResult {
     data: string[];
 }
 
+/** Payload emitted by `@mapped` when the `output` prop is set to 'mapping'. */
+export interface MappingOutput {
+    /** The original, untransformed File. */
+    file: File;
+    /** Spreadsheet column index → schema field key. */
+    mapping: Record<number, string>;
+    /** Whether row 1 of the file is a header row. */
+    hasHeaders: boolean;
+}
+
 // ─── Errors ───────────────────────────────────────────────────────────────────
 
 export type SheetMapperErrorCode =

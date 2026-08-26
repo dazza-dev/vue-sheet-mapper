@@ -22,6 +22,7 @@ export type {
     ParsedColumn,
     ColumnState,
     MappedResult,
+    MappingOutput,
     SheetMapperError,
     SheetMapperErrorCode,
     Messages,

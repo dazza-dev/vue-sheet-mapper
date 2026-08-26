@@ -1,4 +1,4 @@
-import { ref, computed, watch, toValue } from 'vue';
+import { ref, shallowRef, computed, watch, toValue } from 'vue';
 import type { Ref, ComputedRef, MaybeRefOrGetter } from 'vue';
 import type { SchemaField, ColumnState, MappedResult, ParsedColumn, SheetMapperError, MatcherFn } from '../types';
 import { parseFile } from '../utils/parseFile';
@@ -79,7 +79,7 @@ function formatBytes(bytes: number): string {
  * Automatically re-evaluates auto-matching when schema fields change or arrive asynchronously.
  */
 export function useSheetMapper(
-    fields: MaybeRefOrGetter<SchemaField[]> | SchemaField[],
+    fields: MaybeRefOrGetter<SchemaField[]>,
     options: UseSheetMapperOptions = {}
 ): UseSheetMapperReturn {
     const previewRows = options.previewRows ?? 5;
@@ -88,22 +88,19 @@ export function useSheetMapper(
 
     const loading = ref(false);
     const error = ref<SheetMapperError | null>(null);
-    const file = ref<File | null>(null);
+    // shallowRef: a File is an opaque handle. Deep reactivity would hand consumers
+    // a Proxy instead of the File itself, which FormData and fetch reject.
+    const file = shallowRef<File | null>(null);
     const defaultHasHeaders = options.defaultHasHeaders ?? true;
     const hasHeaders = ref(defaultHasHeaders);
     const columns = ref<ColumnState[]>([]);
 
-    function getFieldsArray(): SchemaField[] {
-        const val = toValue(fields);
-        if (Array.isArray(val)) return val;
-        if (val && typeof val === 'object' && Array.isArray((val as any).value)) return (val as any).value;
-        return [];
-    }
-
-    const resolvedFields = computed<SchemaField[]>(() => getFieldsArray());
-
     // Raw parsed columns kept so we can re-apply hasHeaders toggle
     let rawParsed: ParsedColumn[] = [];
+
+    // Columns the user explicitly assigned, ignored or cleared.
+    // Auto-matching never overwrites them.
+    const touched = new Set<number>();
 
     const hasFile = computed(() => file.value !== null);
 
@@ -157,15 +154,14 @@ export function useSheetMapper(
         file.value = f;
         hasHeaders.value = defaultHasHeaders;
 
-        const currentFields = getFieldsArray();
-        const matches = matchFn(rawParsed, currentFields);
+        const matches = matchFn(rawParsed, toValue(fields));
         columns.value = buildColumnStates(rawParsed, matches);
+        touched.clear();
         loading.value = false;
     }
 
-    /** `columnIndex` is the position in the `columns` array — what the UI iterates —
-     *  not `ColumnState.index` (the position in the spreadsheet). */
-    function assignField(columnIndex: number, fieldKey: string | null): void {
+    /** Internal setter: applies the assignment without marking the column as touched. */
+    function setAssignment(columnIndex: number, fieldKey: string | null): void {
         const col = columns.value[columnIndex];
         if (!col) return;
 
@@ -181,14 +177,23 @@ export function useSheetMapper(
         col.assignedKey = fieldKey;
     }
 
+    /** `columnIndex` is the position in the `columns` array — what the UI iterates —
+     *  not `ColumnState.index` (the position in the spreadsheet). */
+    function assignField(columnIndex: number, fieldKey: string | null): void {
+        if (!columns.value[columnIndex]) return;
+        touched.add(columnIndex);
+        setAssignment(columnIndex, fieldKey);
+    }
+
     /** `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     function ignoreColumn(columnIndex: number): void {
         assignField(columnIndex, 'ignore');
     }
 
     function ignoreUnassignedColumns(): void {
-        columns.value.forEach((col) => {
+        columns.value.forEach((col, i) => {
             if (col.assignedKey === null) {
+                touched.add(i);
                 col.assignedKey = 'ignore';
             }
         });
@@ -227,16 +232,24 @@ export function useSheetMapper(
 
     // Automatically re-evaluate auto-matching when fields change (e.g. async fetch from backend)
     watch(
-        resolvedFields,
+        () => toValue(fields),
         (newFields) => {
-            if (newFields.length > 0 && rawParsed.length > 0 && columns.value.length > 0) {
-                const matches = matchFn(rawParsed, newFields);
-                columns.value.forEach((col, idx) => {
-                    if (col.assignedKey === null && matches.has(idx)) {
-                        col.assignedKey = matches.get(idx)!;
-                    }
-                });
-            }
+            if (!rawParsed.length || !columns.value.length) return;
+
+            // Keys the user already decided on are off-limits to auto-matching
+            const reserved = new Set<string>();
+            columns.value.forEach((col, i) => {
+                if (touched.has(i) && col.assignedKey && col.assignedKey !== 'ignore') {
+                    reserved.add(col.assignedKey);
+                }
+            });
+
+            const matches = matchFn(rawParsed, newFields);
+            columns.value.forEach((col, i) => {
+                if (touched.has(i)) return;
+                const key = matches.get(i);
+                col.assignedKey = key && !reserved.has(key) ? key : null;
+            });
         },
         { deep: true }
     );
@@ -252,7 +265,7 @@ export function useSheetMapper(
     const unassignedColumns = computed(() => columns.value.filter((c) => c.assignedKey === null));
 
     const missingRequiredFields = computed(() =>
-        getFieldsArray().filter((f) => f && f.required && !takenKeys.value.has(f.key))
+        toValue(fields).filter((f) => f.required && !takenKeys.value.has(f.key))
     );
 
     const isValid = computed(
@@ -306,6 +319,7 @@ export function useSheetMapper(
     function reset(): void {
         file.value = null;
         columns.value = [];
+        touched.clear();
         error.value = null;
         rawParsed = [];
         hasHeaders.value = defaultHasHeaders;
