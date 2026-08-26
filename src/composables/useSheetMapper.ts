@@ -18,6 +18,8 @@ export interface UseSheetMapperOptions {
     maxRows?: number;
     /** Initial value of hasHeaders when a file is loaded or reset. Default: true. */
     defaultHasHeaders?: boolean;
+    /** TextDecoder label (e.g. 'shift-jis') forcing the encoding of CSV/text files. Detected automatically when omitted; ignored for .xlsx and .xls. */
+    encoding?: string;
 }
 
 export interface UseSheetMapperReturn {
@@ -131,7 +133,7 @@ export function useSheetMapper(
         }
 
         try {
-            rawParsed = await parseFile(f);
+            rawParsed = await parseFile(f, options.encoding);
         } catch (e) {
             error.value = e as SheetMapperError;
             loading.value = false;

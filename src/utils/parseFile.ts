@@ -24,12 +24,49 @@ function readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
     });
 }
 
+/** Zip header (.xlsx) or OLE compound file header (.xls). */
+function isBinaryWorkbook(bytes: Uint8Array): boolean {
+    if (bytes[0] === 0x50 && bytes[1] === 0x4b) return true;
+    return bytes[0] === 0xd0 && bytes[1] === 0xcf && bytes[2] === 0x11 && bytes[3] === 0xe0;
+}
+
+/**
+ * SheetJS honours a byte order mark but falls back to Windows-1252 for text
+ * without one, and cannot read UTF-16 at all. Most tools other than Excel for
+ * Windows emit UTF-8 without a BOM, so decode here instead.
+ *
+ * A byte sequence that decodes as strict UTF-8 is UTF-8 in practice: for
+ * Windows-1252 text to pass, every high byte would have to land inside a valid
+ * multi-byte sequence.
+ */
+function decodeText(bytes: Uint8Array, encoding?: string): string {
+    if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder('utf-16le').decode(bytes);
+    if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder('utf-16be').decode(bytes);
+    if (encoding) return new TextDecoder(encoding).decode(bytes);
+
+    try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch {
+        return new TextDecoder('windows-1252').decode(bytes);
+    }
+}
+
+function readWorkbook(buffer: ArrayBuffer, encoding?: string): XLSX.WorkBook {
+    const bytes = new Uint8Array(buffer);
+    return isBinaryWorkbook(bytes)
+        ? XLSX.read(buffer, { type: 'array', raw: false })
+        : XLSX.read(decodeText(bytes, encoding), { type: 'string', raw: false });
+}
+
 /**
  * Parse an Excel/CSV file into an array of ParsedColumn objects.
  * The first row is used as the column name; remaining rows are data.
  * Entirely empty columns (all blank) are dropped.
+ *
+ * `encoding` is a TextDecoder label (e.g. 'shift-jis') that overrides the
+ * detection above for text files. Binary workbooks ignore it.
  */
-export async function parseFile(file: File): Promise<ParsedColumn[]> {
+export async function parseFile(file: File, encoding?: string): Promise<ParsedColumn[]> {
     if (!isAccepted(file)) {
         throw {
             code: 'INVALID_FILE_TYPE',
@@ -44,7 +81,12 @@ export async function parseFile(file: File): Promise<ParsedColumn[]> {
         throw { code: 'FILE_READ_ERROR', message: 'Could not read file.' } satisfies SheetMapperError;
     }
 
-    const workbook = XLSX.read(buffer, { type: 'array', raw: false });
+    let workbook: XLSX.WorkBook;
+    try {
+        workbook = readWorkbook(buffer, encoding);
+    } catch {
+        throw { code: 'FILE_READ_ERROR', message: 'Could not parse file.' } satisfies SheetMapperError;
+    }
 
     if (!workbook.SheetNames.length) {
         throw { code: 'NO_WORKSHEET', message: 'No worksheets found.' } satisfies SheetMapperError;

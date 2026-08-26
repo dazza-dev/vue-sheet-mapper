@@ -1,0 +1,17 @@
+<svg width="340" height="64" viewBox="0 0 340 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="vue-sheet-mapper">
+    <g transform="translate(0 8)">
+        <rect width="48" height="48" rx="11" fill="#35495E"/>
+        <g fill="#FFFFFF" fill-opacity="0.32">
+            <rect x="8" y="19" width="6" height="17" rx="2.4"/>
+            <rect x="16.5" y="12" width="6" height="24" rx="2.4"/>
+        </g>
+        <g fill="#42B883">
+            <rect x="28" y="12" width="12" height="6.5" rx="2.4"/>
+            <rect x="28" y="20.75" width="12" height="6.5" rx="2.4"/>
+            <rect x="28" y="29.5" width="12" height="6.5" rx="2.4"/>
+        </g>
+    </g>
+
+    <text x="64" y="31" fill="#35495E" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="-0.4">vue-sheet-mapper</text>
+    <text x="64" y="49" fill="#7A879B" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" letter-spacing="0.1">Map spreadsheet columns to your schema</text>
+</svg>

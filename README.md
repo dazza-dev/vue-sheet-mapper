@@ -1,8 +1,31 @@
-# @dazzadev/vue-sheet-mapper
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="demo/public/logo-wordmark-dark.svg">
+    <img src="demo/public/logo-wordmark.svg" alt="vue-sheet-mapper" width="340">
+  </picture>
+</p>
 
-A Vue 3 component that lets users map columns from an Excel or CSV file to a schema you define. Drop it in, give it your field list, and it handles the file upload, column preview, auto-matching, validation, and structured output.
+<p align="center">
+  A Vue 3 component that lets users map columns from an Excel or CSV file to a schema you define.<br>
+  Drop it in, give it your field list, and it handles the file upload, column preview,<br>
+  auto-matching, validation, and structured output.
+</p>
 
-**[Live demo →](https://dazza-dev.github.io/vue-sheet-mapper/)**
+<p align="center">
+  <a href="https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper"><img src="https://img.shields.io/npm/v/@dazzadev/vue-sheet-mapper?color=42b883&label=npm" alt="npm"></a>
+  <a href="https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper"><img src="https://img.shields.io/bundlephobia/minzip/@dazzadev/vue-sheet-mapper?color=35495e&label=gzip" alt="bundle size"></a>
+  <img src="https://img.shields.io/npm/l/@dazzadev/vue-sheet-mapper?color=35495e" alt="license">
+</p>
+
+<p align="center">
+  <strong><a href="https://dazza-dev.github.io/vue-sheet-mapper/">Live demo →</a></strong>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
+
+<p align="center">
+  <img src="demo/public/screenshot.png" alt="Column mapping screen: each spreadsheet column is a card with a data preview — matched columns in green, an ignored column in orange, and an unmatched one waiting for the user to pick a field" width="900">
+</p>
 
 ## Features
 
@@ -107,6 +130,7 @@ function onMapped(results: MappedResult[]) {
 | `autoConfirm`       | `boolean`                              | `false` | Emit `@mapped` immediately if all columns are valid after auto-matching, without showing the confirm button. |
 | `maxFileSize`       | `number`                               | —       | Maximum file size in bytes. Files larger than this are rejected before parsing.                              |
 | `maxRows`           | `number`                               | —       | Maximum number of data rows allowed. Files with more rows are rejected after parsing.                        |
+| `encoding`          | `string`                               | —       | `TextDecoder` label (e.g. `'shift-jis'`) forcing the encoding of CSV/text files. Detected automatically when omitted; ignored for `.xlsx` and `.xls`. |
 
 ---
 
@@ -667,6 +691,32 @@ The most automated setup — zero user interaction when the file format is known
 
 ---
 
+## File encoding
+
+`.xlsx` and `.xls` carry their own encoding, so they always read correctly. CSV and other text files do not, and the encoding has to be inferred from the bytes.
+
+The rules, in order:
+
+1. A UTF-16 byte order mark wins — both LE and BE.
+2. An explicit `encoding` prop wins over detection.
+3. Otherwise, the file is decoded as UTF-8 when the bytes are valid UTF-8, and as Windows-1252 when they are not.
+
+That last step matters because the two common CSV producers disagree. Excel for Windows writes Windows-1252, or UTF-8 with a BOM. Almost everything else — Google Sheets, Numbers, `pandas`, a backend export — writes UTF-8 with no BOM. Both are handled without configuration: for Windows-1252 text to pass a strict UTF-8 decode, every high byte would have to land inside a valid multi-byte sequence, which accented text does not do. Pure ASCII decodes the same either way.
+
+Set `encoding` only for a legacy encoding the detection cannot reach, such as Shift-JIS, GB18030 or KOI8-R — those are not valid UTF-8, so they would otherwise fall back to Windows-1252 and come out garbled.
+
+```vue
+<SheetMapper :fields="fields" encoding="shift-jis" />
+```
+
+```typescript
+const { loadFile } = useSheetMapper(fields, { encoding: "shift-jis" });
+```
+
+Any [`TextDecoder` label](https://developer.mozilla.org/en-US/docs/Web/API/Encoding_API/Encodings) is accepted.
+
+---
+
 ## File size limit
 
 Reject files before parsing with `maxFileSize` (in bytes). The error message is localized and supports the `{size}` placeholder.
@@ -804,6 +854,7 @@ const {
   autoIgnore: false,
   maxFileSize: 10 * 1024 * 1024,
   maxRows: 10_000,
+  encoding: undefined, // e.g. "shift-jis" — auto-detected when omitted
   matcher: autoMatch, // or your own MatcherFn
   columnLabel: (i) => `Col ${i + 1}`, // name for headerless columns
 });

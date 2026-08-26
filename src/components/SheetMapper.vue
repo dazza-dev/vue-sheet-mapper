@@ -128,6 +128,9 @@ const props = withDefaults(
         /** What `@mapped` emits: the row-oriented results ('rows', default), or the raw
          *  file plus the mapping dictionary ('mapping'). Ignores `transform` when 'mapping'. */
         output?: 'rows' | 'mapping';
+        /** TextDecoder label (e.g. 'shift-jis') forcing the encoding of CSV/text files.
+         *  Detected automatically when omitted; ignored for .xlsx and .xls. */
+        encoding?: string;
     }>(),
     {
         previewRows: 5,
@@ -183,6 +186,7 @@ const {
     maxFileSize: props.maxFileSize,
     maxRows: props.maxRows,
     defaultHasHeaders: props.defaultHasHeaders,
+    encoding: props.encoding,
 });
 
 const errorMessage = computed(() => {
