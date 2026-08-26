@@ -8,8 +8,8 @@ const fields: SchemaField[] = [
     { key: 'email',      label: 'Email',       aliases: ['mail'] },
 ];
 
-function col(name: string): ParsedColumn {
-    return { name, data: ['value'] };
+function col(name: string, index = 0): ParsedColumn {
+    return { index, name, data: ['value'] };
 }
 
 describe('autoMatch', () => {

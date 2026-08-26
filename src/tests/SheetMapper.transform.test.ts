@@ -14,8 +14,8 @@ const fields: SchemaField[] = [
 ];
 
 const parsedColumns: ParsedColumn[] = [
-    { name: 'Name',  data: ['Ana', 'Luis', 'Maria'] },
-    { name: 'Email', data: ['ana@test.com', 'luis@test.com', 'maria@test.com'] },
+    { index: 0, name: 'Name',  data: ['Ana', 'Luis', 'Maria'] },
+    { index: 1, name: 'Email', data: ['ana@test.com', 'luis@test.com', 'maria@test.com'] },
 ];
 
 async function loadFile(wrapper: ReturnType<typeof mount>) {

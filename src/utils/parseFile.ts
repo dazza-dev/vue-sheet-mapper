@@ -74,7 +74,7 @@ export async function parseFile(file: File): Promise<ParsedColumn[]> {
         // Drop columns where every data cell is empty
         if (data.every((v) => v === '')) continue;
 
-        columns.push({ name, data });
+        columns.push({ index: c, name, data });
     }
 
     if (columns.length === 0) {

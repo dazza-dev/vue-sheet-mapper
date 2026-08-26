@@ -41,17 +41,21 @@ export interface UseSheetMapperReturn {
     missingRequiredFields: ComputedRef<SchemaField[]>;
     /** True if all columns are assigned or ignored, and all required fields are mapped. */
     isValid: ComputedRef<boolean>;
-    /** Mapping dictionary mapping 0-based column index to field key (omitting ignored and unassigned columns). */
+    /** Mapping dictionary mapping spreadsheet column index (`ColumnState.index`) to field key
+     *  (omitting ignored and unassigned columns). Not the position in the `columns` array. */
     mapping: ComputedRef<Record<number, string>>;
     /** Read and parse an Excel (.xlsx, .xls) or CSV file, running auto-matching against the schema. */
     loadFile: (file: File) => Promise<void>;
-    /** Assign a schema field key (or 'ignore' or null) to the column at the given index. */
+    /** Assign a schema field key (or 'ignore' or null) to a column.
+     *  `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     assignField: (columnIndex: number, fieldKey: string | null) => void;
-    /** Mark the column at the given index as ignored. */
+    /** Mark a column as ignored.
+     *  `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     ignoreColumn: (columnIndex: number) => void;
     /** Mark all currently unassigned columns as ignored in one action. */
     ignoreUnassignedColumns: () => void;
-    /** Clear the assignment of the column at the given index back to unassigned (null). */
+    /** Clear the assignment of a column back to unassigned (null).
+     *  `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     clearColumn: (columnIndex: number) => void;
     /** Toggle whether row 1 is treated as headers or data rows. */
     toggleHeaders: () => void;
@@ -105,6 +109,7 @@ export function useSheetMapper(
 
     function buildColumnStates(parsed: ParsedColumn[], matches: Map<number, string>): ColumnState[] {
         return parsed.map((col, i) => ({
+            index: col.index,
             name: col.name,
             previewData: col.data.slice(0, previewRows),
             data: col.data,
@@ -158,6 +163,8 @@ export function useSheetMapper(
         loading.value = false;
     }
 
+    /** `columnIndex` is the position in the `columns` array — what the UI iterates —
+     *  not `ColumnState.index` (the position in the spreadsheet). */
     function assignField(columnIndex: number, fieldKey: string | null): void {
         const col = columns.value[columnIndex];
         if (!col) return;
@@ -174,6 +181,7 @@ export function useSheetMapper(
         col.assignedKey = fieldKey;
     }
 
+    /** `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     function ignoreColumn(columnIndex: number): void {
         assignField(columnIndex, 'ignore');
     }
@@ -186,6 +194,7 @@ export function useSheetMapper(
         });
     }
 
+    /** `columnIndex` is the position in the `columns` array, not `ColumnState.index`. */
     function clearColumn(columnIndex: number): void {
         assignField(columnIndex, null);
     }
@@ -199,7 +208,7 @@ export function useSheetMapper(
                 col.data = newData;
                 col.name = newName;
                 col.previewData = newData.slice(0, previewRows);
-                rawParsed[i] = { name: newName, data: newData };
+                rawParsed[i] = { index: rawParsed[i].index, name: newName, data: newData };
             });
             hasHeaders.value = false;
         } else {
@@ -210,7 +219,7 @@ export function useSheetMapper(
                 col.name = newName;
                 col.data = newData;
                 col.previewData = newData.slice(0, previewRows);
-                rawParsed[i] = { name: newName, data: newData };
+                rawParsed[i] = { index: rawParsed[i].index, name: newName, data: newData };
             });
             hasHeaders.value = true;
         }
@@ -252,9 +261,9 @@ export function useSheetMapper(
 
     const mapping = computed<Record<number, string>>(() => {
         const map: Record<number, string> = {};
-        columns.value.forEach((col, idx) => {
+        columns.value.forEach((col) => {
             if (col.assignedKey && col.assignedKey !== 'ignore') {
-                map[idx] = col.assignedKey;
+                map[col.index] = col.assignedKey;
             }
         });
         return map;

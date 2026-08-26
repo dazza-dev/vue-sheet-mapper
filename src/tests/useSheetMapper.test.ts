@@ -20,9 +20,9 @@ const fields: SchemaField[] = [
 ];
 
 const parsedColumns: ParsedColumn[] = [
-    { name: 'Name',  data: ['Ana', 'Luis'] },
-    { name: 'Email', data: ['ana@mail.com', 'luis@mail.com'] },
-    { name: 'Phone', data: ['111', '222'] },
+    { index: 0, name: 'Name',  data: ['Ana', 'Luis'] },
+    { index: 1, name: 'Email', data: ['ana@mail.com', 'luis@mail.com'] },
+    { index: 2, name: 'Phone', data: ['111', '222'] },
 ];
 
 function fakeFile(name = 'test.csv', size = 100): File {
@@ -35,7 +35,7 @@ async function loadWithColumns(
     cols = parsedColumns,
     file = fakeFile(),
 ) {
-    const clonedCols = cols.map((c) => ({ name: c.name, data: [...c.data] }));
+    const clonedCols = cols.map((c) => ({ index: c.index, name: c.name, data: [...c.data] }));
     mockParseFile.mockResolvedValueOnce(clonedCols);
     await mapper.loadFile(file);
 }
@@ -112,7 +112,7 @@ describe('useSheetMapper — loadFile', () => {
     });
 
     it('rejects files with more rows than maxRows', async () => {
-        const cols: ParsedColumn[] = [{ name: 'Name', data: Array(1001).fill('value') }];
+        const cols: ParsedColumn[] = [{ index: 0, name: 'Name', data: Array(1001).fill('value') }];
         const mapper = useSheetMapper(fields, { maxRows: 1000 });
         mockParseFile.mockResolvedValueOnce(cols);
         await mapper.loadFile(fakeFile());
@@ -122,7 +122,7 @@ describe('useSheetMapper — loadFile', () => {
     });
 
     it('accepts files within maxRows', async () => {
-        const cols: ParsedColumn[] = [{ name: 'Name', data: Array(500).fill('value') }];
+        const cols: ParsedColumn[] = [{ index: 0, name: 'Name', data: Array(500).fill('value') }];
         const mapper = useSheetMapper(fields, { maxRows: 1000 });
         mockParseFile.mockResolvedValueOnce(cols);
         await mapper.loadFile(fakeFile());
@@ -140,8 +140,8 @@ describe('useSheetMapper — loadFile', () => {
 
     it('sets unmatched columns to ignore when autoIgnore is true', async () => {
         const cols: ParsedColumn[] = [
-            { name: 'Name',    data: ['Ana'] },
-            { name: 'Unknown', data: ['x'] },
+            { index: 0, name: 'Name',    data: ['Ana'] },
+            { index: 1, name: 'Unknown', data: ['x'] },
         ];
         const mapper = useSheetMapper(fields, { autoIgnore: true });
         await loadWithColumns(mapper, cols);
@@ -273,8 +273,8 @@ describe('useSheetMapper — toggleHeaders', () => {
 
     it('promotes first data row to header when toggling on', async () => {
         const cols: ParsedColumn[] = [
-            { name: '', data: ['Name', 'Ana', 'Luis'] },
-            { name: '', data: ['Email', 'ana@mail.com', 'luis@mail.com'] },
+            { index: 0, name: '', data: ['Name', 'Ana', 'Luis'] },
+            { index: 1, name: '', data: ['Email', 'ana@mail.com', 'luis@mail.com'] },
         ];
         const mapper = useSheetMapper(fields, { defaultHasHeaders: false });
         mockParseFile.mockResolvedValueOnce(cols);

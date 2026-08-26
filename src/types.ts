@@ -16,6 +16,9 @@ export interface SchemaField {
 
 /** One column as extracted from the spreadsheet. */
 export interface ParsedColumn {
+    /** 0-based position of this column in the source spreadsheet.
+     *  Stable even when entirely empty columns are dropped. */
+    index: number;
     /** The value of the first row (used as column header when hasHeaders = true). */
     name: string;
     /** All data rows below the header (or all rows if hasHeaders = false). */
@@ -26,6 +29,9 @@ export interface ParsedColumn {
 
 /** State for one column card in the mapper UI. */
 export interface ColumnState {
+    /** 0-based position of this column in the source spreadsheet.
+     *  This is what `mapping` sends to the backend — NOT the position in the `columns` array. */
+    index: number;
     /** Original column name from the file (may be "Column 1" when no headers). */
     name: string;
     /** Rows shown in the preview section. */
@@ -90,6 +96,9 @@ export type TransformFn<T = Record<string, string>> = (row: Record<string, strin
  * fields, and must return a Map<columnIndex, fieldKey> with the initial
  * assignments. Use this to replace the built-in normalized exact-match with
  * fuzzy matching, positional mapping, or any domain-specific logic.
+ *
+ * The keys of the returned Map are **positions in the `columns` array it
+ * receives**, not `ParsedColumn.index` (the position in the spreadsheet).
  *
  * Import `autoMatch` from the package if you want to compose with the default.
  */
