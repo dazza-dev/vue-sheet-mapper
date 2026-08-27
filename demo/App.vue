@@ -262,6 +262,20 @@
                         </SegControl>
 
                         <SegControl
+                            v-model="useValidation"
+                            :label="t.out.validation"
+                            prop=":validate-rows"
+                            :options="[
+                                { label: t.behavior.off, value: false },
+                                { label: t.behavior.on, value: true },
+                            ]"
+                        >
+                            <template #hint>{{ t.out.validationHint }}</template>
+                        </SegControl>
+
+                        <CodeBlock v-if="useValidation && showSnippets" :code="validationSnippet" compact />
+
+                        <SegControl
                             v-model="useTransform"
                             :label="t.out.transform"
                             prop=":transform"
@@ -405,11 +419,13 @@
                                 :auto-ignore="autoIgnore"
                                 :auto-confirm="autoConfirm"
                                 :transform="useTransform && outputMode === 'rows' ? contactTransform : undefined"
+                                :validate-rows="useValidation ? validateContacts : undefined"
                                 :max-file-size="maxFileSizeOption ? Number(maxFileSizeOption) : undefined"
                                 :max-rows="maxRowsOption ? Number(maxRowsOption) : undefined"
                 :encoding="encodingOption || undefined"
                                 @mapped="onMapped"
                                 @error="onError"
+                                @invalid="onInvalid"
                                 @file-picked="onFilePicked"
                                 @reset="clearOutput"
                             />
@@ -520,7 +536,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { SheetMapper, IconUpload, IconFile, IconCheck, IconBan, IconAlert } from '../src/index';
 import type {
     MappedResult, MappingOutput, SchemaField, Locale, Icons,
-    MessagesOverride, MatcherFn, TransformFn, SheetMapperError,
+    MessagesOverride, MatcherFn, TransformFn, SheetMapperError, RowIssue, RowValidator,
 } from '../src/types';
 
 import { version } from '../package.json';
@@ -586,6 +602,7 @@ const defaultHasHeaders = ref(true);
 const previewRows = ref(4);
 const outputMode = ref<'rows' | 'mapping'>('rows');
 const useTransform = ref(false);
+const useValidation = ref(false);
 const maxFileSizeOption = ref('');
 const maxRowsOption = ref('');
 const encodingOption = ref('');
@@ -693,6 +710,23 @@ const contactTransform: TransformFn<{
     };
 };
 
+// A plain function — the same shape a zod schema or a backend call would take.
+const validateContacts: RowValidator = (rows) => {
+    const seenIds = new Set<string>();
+    return rows.flatMap((row, index) => {
+        const found: RowIssue[] = [];
+        if (!row.document_number) found.push({ index, field: 'document_number', message: 'ID is required' });
+        else if (seenIds.has(row.document_number)) found.push({ index, field: 'document_number', message: 'Duplicate ID' });
+        else seenIds.add(row.document_number);
+
+        if (!row.first_name) found.push({ index, field: 'first_name', message: 'First name is required' });
+        if (row.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email)) {
+            found.push({ index, field: 'email', message: 'Not a valid email' });
+        }
+        return found;
+    });
+};
+
 // Positional matcher — maps column 0 → first field, column 1 → second field, etc.
 const positionalMatcher: MatcherFn = (columns, fields) => {
     const map = new Map<number, string>();
@@ -777,7 +811,9 @@ const behaviorBadge = computed(
     () => Number(matcherMode.value !== 'builtin') + Number(autoIgnore.value) + Number(autoConfirm.value)
         + Number(!defaultHasHeaders.value) + Number(previewRows.value !== 4),
 );
-const outputBadge = computed(() => Number(outputMode.value !== 'rows') + Number(useTransform.value));
+const outputBadge = computed(
+    () => Number(outputMode.value !== 'rows') + Number(useTransform.value) + Number(useValidation.value),
+);
 const fileBadge = computed(
     () => Number(!!encodingOption.value) + Number(!!maxFileSizeOption.value) + Number(!!maxRowsOption.value),
 );
@@ -924,6 +960,19 @@ const transformSnippet = `const toContact: TransformFn<Contact> =
   };
 };`;
 
+const validationSnippet = `const validateRows: RowValidator = (rows) =>
+  rows.flatMap((row, index) => {
+    const r = schema.safeParse(row);
+    return r.success ? [] : r.error.issues.map(i => ({
+      index,
+      field: String(i.path[0]),
+      message: i.message,
+    }));
+  });
+
+// zod, yup, tu funcion o tu backend:
+// la libreria no mira los valores.`;
+
 const mappingSnippet = `async function onMapped(p: MappingOutput) {
   const body = new FormData();
   body.append('file', p.file);
@@ -957,6 +1006,10 @@ function onMapped(data: MappedResult[] | MappingOutput | unknown[]): void {
     console.log('mapped:', data);
 }
 
+function onInvalid(found: RowIssue[]): void {
+    console.warn('invalid rows:', found);
+}
+
 function onError(err: SheetMapperError): void {
     lastError.value = err;
     console.error('error:', err);
@@ -985,6 +1038,7 @@ function resetOptions(): void {
     previewRows.value = 4;
     outputMode.value = 'rows';
     useTransform.value = false;
+    useValidation.value = false;
     maxFileSizeOption.value = '';
     maxRowsOption.value = '';
     encodingOption.value = '';

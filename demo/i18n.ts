@@ -20,6 +20,7 @@ export interface DemoMessages {
     out: {
         mode: string; rowsHint: string; mappingHint: string;
         transform: string; transformHint: string; transformNA: string;
+        validation: string; validationHint: string;
     };
     file: { encoding: string; autoDetect: string; encodingHint: string; maxSize: string; maxRows: string; noLimit: string };
     tabs: { preview: string; code: string; output: string; restart: string };
@@ -53,6 +54,8 @@ const en: DemoMessages = {
         transform: 'Transform',
         transformHint: 'Turns columns into row objects: trims whitespace, joins first and last name, normalizes the phone number.',
         transformNA: 'Not available with output="mapping": they are mutually exclusive, since nothing is converted into rows.',
+        validation: 'Row validation',
+        validationHint: 'Runs a plain function over the mapped rows and lists what it flags. The sample file has a duplicate ID, a blank name and a broken email — turn this on and confirm.',
     },
     file: { encoding: 'Encoding', autoDetect: 'Detect automatically', encodingHint: 'Text files only. Detection already handles UTF-8 with or without a BOM, UTF-16 and Windows-1252 with no configuration. Set it only for an older encoding that detection cannot reach.', maxSize: 'Max file size', maxRows: 'Max rows', noLimit: 'No limit' },
     tabs: { preview: 'Preview', code: 'Code', output: 'Output', restart: 'Restart' },
@@ -89,6 +92,8 @@ const es: DemoMessages = {
         transform: 'Transform',
         transformHint: 'Convierte las columnas en objetos de fila: limpia espacios, une nombre y apellido y normaliza el teléfono.',
         transformNA: 'No aplica con output="mapping": son mutuamente excluyentes, porque nada se convierte en filas.',
+        validation: 'Validación de filas',
+        validationHint: 'Ejecuta una función sobre las filas mapeadas y lista lo que marca. El archivo de ejemplo trae un ID duplicado, un nombre vacío y un email roto: actívalo y confirma.',
     },
     file: { encoding: 'Codificación', autoDetect: 'Detectar automáticamente', encodingHint: 'Solo aplica a archivos de texto. La detección ya resuelve UTF-8 con o sin BOM, UTF-16 y Windows-1252 sin configurar nada. Fíjala solo para una codificación heredada que la detección no alcanza.', maxSize: 'Tamaño máximo', maxRows: 'Filas máximas', noLimit: 'Sin límite' },
     tabs: { preview: 'Vista previa', code: 'Código', output: 'Salida', restart: 'Reiniciar' },
@@ -125,6 +130,8 @@ const fr: DemoMessages = {
         transform: 'Transform',
         transformHint: 'Transforme les colonnes en objets de ligne : nettoie les espaces, réunit prénom et nom, normalise le téléphone.',
         transformNA: 'Indisponible avec output="mapping" : les deux s’excluent, puisque rien n’est converti en lignes.',
+        validation: 'Validation des lignes',
+        validationHint: 'Exécute une fonction sur les lignes mappées et liste ce qu’elle signale. Le fichier d’exemple contient un ID en double, un nom vide et un email cassé.',
     },
     file: { encoding: 'Encodage', autoDetect: 'Détecter automatiquement', encodingHint: 'Fichiers texte uniquement. La détection gère déjà UTF-8 avec ou sans BOM, UTF-16 et Windows-1252 sans configuration. Ne le fixez que pour un encodage ancien hors de portée de la détection.', maxSize: 'Taille maximale', maxRows: 'Lignes maximales', noLimit: 'Sans limite' },
     tabs: { preview: 'Aperçu', code: 'Code', output: 'Sortie', restart: 'Redémarrer' },
@@ -161,6 +168,8 @@ const pt: DemoMessages = {
         transform: 'Transform',
         transformHint: 'Converte as colunas em objetos de linha: limpa espaços, junta nome e sobrenome e normaliza o telefone.',
         transformNA: 'Indisponível com output="mapping": são mutuamente exclusivos, pois nada é convertido em linhas.',
+        validation: 'Validação de linhas',
+        validationHint: 'Executa uma função sobre as linhas mapeadas e lista o que ela marca. O arquivo de exemplo tem um ID duplicado, um nome vazio e um email quebrado.',
     },
     file: { encoding: 'Codificação', autoDetect: 'Detectar automaticamente', encodingHint: 'Apenas arquivos de texto. A detecção já resolve UTF-8 com ou sem BOM, UTF-16 e Windows-1252 sem configuração. Defina apenas para uma codificação antiga fora do alcance da detecção.', maxSize: 'Tamanho máximo', maxRows: 'Linhas máximas', noLimit: 'Sem limite' },
     tabs: { preview: 'Pré-visualização', code: 'Código', output: 'Saída', restart: 'Reiniciar' },
@@ -197,6 +206,8 @@ const nl: DemoMessages = {
         transform: 'Transform',
         transformHint: 'Zet kolommen om naar rij-objecten: haalt spaties weg, voegt voor- en achternaam samen en normaliseert het telefoonnummer.',
         transformNA: 'Niet beschikbaar met output="mapping": ze sluiten elkaar uit, want er wordt niets naar rijen omgezet.',
+        validation: 'Rijvalidatie',
+        validationHint: 'Voert een functie uit over de gekoppelde rijen en toont wat die markeert. Het voorbeeldbestand bevat een dubbele ID, een lege naam en een kapot e-mailadres.',
     },
     file: { encoding: 'Tekencodering', autoDetect: 'Automatisch detecteren', encodingHint: 'Alleen tekstbestanden. De detectie regelt UTF-8 met of zonder BOM, UTF-16 en Windows-1252 zonder instellingen. Stel dit alleen in voor een oude codering die de detectie niet bereikt.', maxSize: 'Maximale bestandsgrootte', maxRows: 'Maximaal aantal rijen', noLimit: 'Geen limiet' },
     tabs: { preview: 'Voorbeeld', code: 'Code', output: 'Uitvoer', restart: 'Opnieuw' },
