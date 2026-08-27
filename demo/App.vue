@@ -8,9 +8,101 @@
                 <span class="topbar__tag">demo</span>
             </div>
             <div class="topbar__right">
+                <div class="theme" role="group" :aria-label="t.nav.theme">
+                    <button
+                        v-for="opt in themes"
+                        :key="opt.value"
+                        type="button"
+                        class="theme__btn"
+                        :class="{ 'theme__btn--on': theme === opt.value }"
+                        :aria-pressed="theme === opt.value"
+                        :title="t.nav[opt.titleKey]"
+                        @click="theme = opt.value"
+                    >
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path :d="opt.path" />
+                            <circle v-if="opt.circle" :cx="opt.circle[0]" :cy="opt.circle[1]" :r="opt.circle[2]" />
+                        </svg>
+                        <span class="sr-only">{{ t.nav[opt.titleKey] }}</span>
+                    </button>
+                </div>
+
+                <div ref="localeMenu" class="lang">
+                    <button
+                        type="button"
+                        class="topbar__action"
+                        :aria-expanded="localeOpen"
+                        aria-haspopup="listbox"
+                        :title="`${t.nav.language} — ${activeLocale.name}`"
+                        @click="localeOpen = !localeOpen"
+                    >
+                        <span class="lang__flag">{{ activeLocale.flag }}</span>
+                        <span>{{ activeLocale.code.toUpperCase() }}</span>
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor"
+                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+
+                    <ul v-if="localeOpen" class="lang__menu" role="listbox">
+                        <li v-for="l in locales" :key="l.code">
+                            <button
+                                type="button"
+                                role="option"
+                                :aria-selected="locale === l.code"
+                                class="lang__item"
+                                :class="{ 'lang__item--on': locale === l.code }"
+                                @click="locale = l.code; localeOpen = false"
+                            >
+                                <span class="lang__flag">{{ l.flag }}</span>
+                                <span>{{ l.name }}</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <a class="topbar__action" :href="asset('sample-contacts.xlsx')" download
+                   :title="t.nav.sampleHint">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                    <span>{{ t.nav.sample }}</span>
+                </a>
+
+                <button
+                    type="button"
+                    class="topbar__action"
+                    :class="{ 'topbar__action--on': showSnippets }"
+                    :aria-pressed="showSnippets"
+                    :title="t.nav.snippetsHint"
+                    @click="showSnippets = !showSnippets"
+                >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                    </svg>
+                    <span>{{ t.nav.snippets }}</span>
+                </button>
+
+                <span class="topbar__sep" aria-hidden="true"></span>
+
                 <span class="topbar__version">v{{ version }}</span>
-                <a class="topbar__link" href="https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper" target="_blank" rel="noopener">npm</a>
-                <a class="topbar__link topbar__link--solid" href="https://github.com/dazza-dev/vue-sheet-mapper" target="_blank" rel="noopener">GitHub</a>
+                <a class="topbar__link topbar__link--npm" href="https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper"
+                   target="_blank" rel="noopener" title="npm">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                        <path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.331h-2.669zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331zM10.665 10H12v2.667h-1.335V10z" />
+                    </svg>
+                    <span>npm</span>
+                </a>
+                <a class="topbar__link topbar__link--gh" href="https://github.com/dazza-dev/vue-sheet-mapper"
+                   target="_blank" rel="noopener" title="GitHub">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                        <path d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.9 1.2 1.9 1.2 1.1 1.9 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3z" />
+                    </svg>
+                    <span>GitHub</span>
+                </a>
             </div>
         </header>
 
@@ -18,74 +110,26 @@
             <!-- ─── Sidebar ─────────────────────────────────────────────── -->
             <aside class="sidebar">
                 <div class="sidebar__head">
-                    <h2>Settings</h2>
+                    <h2>{{ t.side.title }}</h2>
                     <button v-if="activeCount" class="sidebar__reset" type="button" @click="resetOptions">
-                        Reset all
+                        {{ t.side.reset }}
                     </button>
                 </div>
 
                 <div class="sidebar__scroll">
-                    <!-- Schema -->
-                    <PanelGroup title="Schema" :badge="schemaBadge">
-                        <SegControl
-                            v-model="fieldsSource"
-                            label="Field source"
-                            prop=":fields"
-                            :options="[
-                                { label: 'Immediate', value: 'immediate' },
-                                { label: 'From an API', value: 'api' },
-                            ]"
-                        >
-                            <template #hint>
-                                <template v-if="fieldsSource === 'api'">
-                                    Fields arrive {{ apiDelay }} ms later, the way a schema fetched from your backend does.
-                                    Pick the file before they land — auto-matching applies itself the moment they do.
-                                </template>
-                                <template v-else>
-                                    The schema is available from the first render.
-                                </template>
-                            </template>
-                        </SegControl>
-
-                        <div v-if="fieldsSource === 'api'" class="ctl">
-                            <div class="schema-status" :class="{ 'schema-status--loading': schemaLoading }">
-                                <span class="schema-status__dot" />
-                                <span>{{ schemaLoading ? 'Loading schema…' : `${activeFields.length} fields loaded` }}</span>
-                            </div>
-                            <button class="btn-ghost" type="button" @click="loadSchemaFromApi">
-                                Simulate the fetch again
-                            </button>
-                            <pre v-if="showSnippets" class="snippet">{{ reactiveFieldsSnippet }}</pre>
-                        </div>
-                    </PanelGroup>
-
                     <!-- Appearance -->
-                    <PanelGroup title="Appearance" :badge="appearanceBadge">
-                        <div class="ctl">
-                            <div class="ctl__top">
-                                <label class="ctl__label" for="locale">Language</label>
-                                <code class="ctl__prop">locale</code>
-                            </div>
-                            <select id="locale" v-model="locale" class="select">
-                                <option value="en">English</option>
-                                <option value="es">Español</option>
-                                <option value="fr">Français</option>
-                                <option value="pt">Português</option>
-                                <option value="nl">Nederlands</option>
-                            </select>
-                        </div>
-
+                    <PanelGroup :title="t.side.appearance" :badge="appearanceBadge">
                         <SegControl
                             v-model="useCustomIcons"
-                            label="Icons"
+                            :label="t.appearance.icons"
                             prop=":icons"
                             :options="[
-                                { label: 'Default', value: false },
-                                { label: 'Custom', value: true },
+                                { label: t.appearance.default, value: false },
+                                { label: t.appearance.custom, value: true },
                             ]"
                         >
                             <template #hint>
-                                Partial override: only the keys you pass are replaced, everything else keeps the default icon.
+                                {{ t.appearance.iconsHint }}
                             </template>
                         </SegControl>
 
@@ -100,89 +144,93 @@
 
                         <SegControl
                             v-model="useCustomMessages"
-                            label="Messages"
+                            :label="t.appearance.messages"
                             prop=":messages"
                             :options="[
-                                { label: 'Default', value: false },
-                                { label: 'Custom', value: true },
+                                { label: t.appearance.default, value: false },
+                                { label: t.appearance.custom, value: true },
                             ]"
                         >
                             <template #hint>
-                                Partial override per locale, merged with the base strings of the active language.
+                                {{ t.appearance.messagesHint }}
                             </template>
                         </SegControl>
 
-                        <pre v-if="useCustomMessages && showSnippets" class="snippet">{{ messagesSnippet }}</pre>
+                        <CodeBlock v-if="useCustomMessages && showSnippets" :code="messagesSnippet" compact />
                     </PanelGroup>
 
                     <!-- Behavior -->
-                    <PanelGroup title="Behavior" :badge="behaviorBadge">
+                    <PanelGroup :title="t.side.behavior" :badge="behaviorBadge">
                         <SegControl
-                            v-model="useCustomMatcher"
-                            label="Auto-match"
+                            v-model="matcherMode"
+                            :label="t.behavior.matcher"
                             prop=":matcher"
                             :options="[
-                                { label: 'Built-in', value: false },
-                                { label: 'Positional', value: true },
+                                { label: t.behavior.builtin, value: 'builtin' },
+                                { label: t.behavior.positional, value: 'positional' },
+                                { label: t.behavior.buggy, value: 'duplicating' },
                             ]"
                         >
                             <template #hint>
-                                <template v-if="useCustomMatcher">
-                                    Column 1 → field 1, column 2 → field 2, ignoring the header names.
+                                <template v-if="matcherMode === 'positional'">
+                                    {{ t.behavior.positionalHint }}
+                                </template>
+                                <template v-else-if="matcherMode === 'duplicating'">
+                                    {{ t.behavior.buggyHint }}
                                 </template>
                                 <template v-else>
-                                    Matches the column name against <code>key</code>, <code>label</code> and <code>aliases</code>, accent-insensitive.
+                                    {{ t.behavior.builtinHint }}
                                 </template>
                             </template>
                         </SegControl>
 
-                        <pre v-if="useCustomMatcher && showSnippets" class="snippet">{{ matcherSnippet }}</pre>
+                        <CodeBlock v-if="matcherMode !== 'builtin' && showSnippets" :code="matcherSnippet" compact />
 
                         <SegControl
                             v-model="autoIgnore"
-                            label="Auto-ignore"
+                            :label="t.behavior.autoIgnore"
                             prop=":auto-ignore"
                             :options="[
-                                { label: 'Off', value: false },
-                                { label: 'On', value: true },
+                                { label: t.behavior.off, value: false },
+                                { label: t.behavior.on, value: true },
                             ]"
                         >
                             <template #hint>
-                                Unmatched columns are pre-set to “ignore”, so the user only reviews the ones that were recognized.
+                                {{ t.behavior.autoIgnoreHint }}
                             </template>
                         </SegControl>
 
                         <SegControl
                             v-model="autoConfirm"
-                            label="Auto-confirm"
+                            :label="t.behavior.autoConfirm"
                             prop=":auto-confirm"
                             :options="[
-                                { label: 'Off', value: false },
-                                { label: 'On', value: true },
+                                { label: t.behavior.off, value: false },
+                                { label: t.behavior.on, value: true },
                             ]"
                         >
                             <template #hint>
-                                If everything is valid after auto-matching, the UI is skipped and <code>@mapped</code> fires right away.
+                                {{ t.behavior.autoConfirmHint }}
                             </template>
                         </SegControl>
 
                         <SegControl
                             v-model="defaultHasHeaders"
-                            label="First row"
+                            :label="t.behavior.firstRow"
                             prop=":default-has-headers"
                             :options="[
-                                { label: 'Header', value: true },
-                                { label: 'Data', value: false },
+                                { label: t.behavior.header, value: true },
+                                { label: t.behavior.data, value: false },
                             ]"
                         >
                             <template #hint>
-                                How row 1 is read on load. The user can flip it from the preview.
+                                {{ t.behavior.firstRowHint }}
                             </template>
                         </SegControl>
 
                         <div class="ctl">
                             <div class="ctl__top">
-                                <label class="ctl__label" for="previewRows">Preview rows</label>
+                                <label class="ctl__label" for="previewRows">{{ t.behavior.previewRows }}</label>
                                 <code class="ctl__prop">:preview-rows</code>
                             </div>
                             <div class="range">
@@ -193,10 +241,10 @@
                     </PanelGroup>
 
                     <!-- Output -->
-                    <PanelGroup title="Output" :badge="outputBadge">
+                    <PanelGroup :title="t.side.output" :badge="outputBadge">
                         <SegControl
                             v-model="outputMode"
-                            label="Output mode"
+                            :label="t.out.mode"
                             prop="output"
                             :options="[
                                 { label: 'rows', value: 'rows' },
@@ -205,48 +253,80 @@
                         >
                             <template #hint>
                                 <template v-if="outputMode === 'mapping'">
-                                    <code>@mapped</code> hands you <code>{ file, mapping, hasHeaders }</code>: the raw file and the column
-                                    dictionary, so your backend does the reading. Nothing is materialized into row objects.
+                                    {{ t.out.mappingHint }}
                                 </template>
                                 <template v-else>
-                                    <code>@mapped</code> hands you <code>MappedResult[]</code>: the file is read in the browser and the values travel as JSON.
+                                    {{ t.out.rowsHint }}
                                 </template>
                             </template>
                         </SegControl>
 
                         <SegControl
                             v-model="useTransform"
-                            label="Transform"
+                            :label="t.out.transform"
                             prop=":transform"
                             :disabled="outputMode === 'mapping'"
                             :options="[
-                                { label: 'Off', value: false },
-                                { label: 'On', value: true },
+                                { label: t.behavior.off, value: false },
+                                { label: t.behavior.on, value: true },
                             ]"
                         >
                             <template #hint>
                                 <template v-if="outputMode === 'mapping'">
-                                    Not available with <code>output="mapping"</code>: they are mutually exclusive, since nothing is converted into rows.
+                                    {{ t.out.transformNA }}
                                 </template>
                                 <template v-else>
-                                    Turns columns into row objects: trims whitespace, joins first and last name, normalizes the phone number.
+                                    {{ t.out.transformHint }}
                                 </template>
                             </template>
                         </SegControl>
 
-                        <pre v-if="useTransform && outputMode === 'rows' && showSnippets" class="snippet">{{ transformSnippet }}</pre>
-                        <pre v-if="outputMode === 'mapping' && showSnippets" class="snippet">{{ mappingSnippet }}</pre>
+                        <CodeBlock v-if="useTransform && outputMode === 'rows' && showSnippets" :code="transformSnippet" compact />
+                        <CodeBlock v-if="outputMode === 'mapping' && showSnippets" :code="mappingSnippet" compact />
+                    </PanelGroup>
+
+                    <!-- Schema -->
+                    <PanelGroup :title="t.side.schema" :badge="schemaBadge">
+                        <SegControl
+                            v-model="fieldsSource"
+                            :label="t.schema.source"
+                            prop=":fields"
+                            :options="[
+                                { label: t.schema.immediate, value: 'immediate' },
+                                { label: t.schema.fromApi, value: 'api' },
+                            ]"
+                        >
+                            <template #hint>
+                                <template v-if="fieldsSource === 'api'">
+                                    {{ t.schema.apiHint.replace('{ms}', String(apiDelay)) }}
+                                </template>
+                                <template v-else>
+                                    {{ t.schema.immediateHint }}
+                                </template>
+                            </template>
+                        </SegControl>
+
+                        <div v-if="fieldsSource === 'api'" class="ctl">
+                            <div class="schema-status" :class="{ 'schema-status--loading': schemaLoading }">
+                                <span class="schema-status__dot" />
+                                <span>{{ schemaLoading ? t.schema.loading : t.schema.loaded.replace('{n}', String(activeFields.length)) }}</span>
+                            </div>
+                            <button class="btn-ghost" type="button" @click="loadSchemaFromApi">
+                                {{ t.schema.simulate }}
+                            </button>
+                            <CodeBlock v-if="showSnippets" :code="reactiveFieldsSnippet" compact />
+                        </div>
                     </PanelGroup>
 
                     <!-- File -->
-                    <PanelGroup title="File" :badge="fileBadge" :default-open="false">
+                    <PanelGroup :title="t.side.file" :badge="fileBadge" :default-open="false">
                         <div class="ctl">
                             <div class="ctl__top">
-                                <label class="ctl__label" for="encoding">Encoding</label>
+                                <label class="ctl__label" for="encoding">{{ t.file.encoding }}</label>
                                 <code class="ctl__prop">encoding</code>
                             </div>
                             <select id="encoding" v-model="encodingOption" class="select">
-                                <option value="">Detect automatically</option>
+                                <option value="">{{ t.file.autoDetect }}</option>
                                 <option value="utf-8">utf-8</option>
                                 <option value="windows-1252">windows-1252</option>
                                 <option value="shift-jis">shift-jis</option>
@@ -254,19 +334,17 @@
                                 <option value="koi8-r">koi8-r</option>
                             </select>
                             <p class="ctl__hint">
-                                Text files only. Detection already handles UTF-8 with or without a BOM, UTF-16
-                                and Windows-1252 with no configuration. Set it only for a legacy encoding that
-                                detection cannot reach.
+                                {{ t.file.encodingHint }}
                             </p>
                         </div>
 
                         <div class="ctl">
                             <div class="ctl__top">
-                                <label class="ctl__label" for="maxSize">Max file size</label>
+                                <label class="ctl__label" for="maxSize">{{ t.file.maxSize }}</label>
                                 <code class="ctl__prop">:max-file-size</code>
                             </div>
                             <select id="maxSize" v-model="maxFileSizeOption" class="select">
-                                <option value="">No limit</option>
+                                <option value="">{{ t.file.noLimit }}</option>
                                 <option value="10485760">10 MB</option>
                                 <option value="1048576">1 MB</option>
                                 <option value="102400">100 KB</option>
@@ -276,7 +354,7 @@
 
                         <div class="ctl">
                             <div class="ctl__top">
-                                <label class="ctl__label" for="maxRows">Max rows</label>
+                                <label class="ctl__label" for="maxRows">{{ t.file.maxRows }}</label>
                                 <code class="ctl__prop">:max-rows</code>
                             </div>
                             <select id="maxRows" v-model="maxRowsOption" class="select">
@@ -289,31 +367,6 @@
                         </div>
                     </PanelGroup>
 
-                    <!-- Sidebar preferences -->
-                    <PanelGroup title="This demo" :default-open="false">
-                        <div class="ctl">
-                            <div class="ctl__top">
-                                <label class="ctl__label">Sample file</label>
-                            </div>
-                            <a class="btn-ghost" :href="asset('sample-contacts.xlsx')" download>
-                                Download contacts.xlsx
-                            </a>
-                            <p class="ctl__hint">20 contacts, 14 columns. Two of them (<code>Internal Ref</code>, <code>Legacy Code</code>) match no field on purpose, so you can see the unassigned and ignored states.</p>
-                        </div>
-
-                        <SegControl
-                            v-model="showSnippets"
-                            label="Code snippets"
-                            :options="[
-                                { label: 'Hide', value: false },
-                                { label: 'Show', value: true },
-                            ]"
-                        >
-                            <template #hint>
-                                Shows the code for each option right here, under the control that turns it on.
-                            </template>
-                        </SegControl>
-                    </PanelGroup>
                 </div>
             </aside>
 
@@ -321,18 +374,18 @@
             <main class="pane">
                 <nav class="tabs">
                     <button
-                        v-for="t in tabs"
-                        :key="t.id"
+                        v-for="item in tabs"
+                        :key="item.id"
                         type="button"
                         class="tabs__btn"
-                        :class="{ 'tabs__btn--on': tab === t.id }"
-                        @click="tab = t.id"
+                        :class="{ 'tabs__btn--on': tab === item.id }"
+                        @click="tab = item.id"
                     >
-                        {{ t.label }}
-                        <span v-if="t.id === 'output' && outputCount" class="tabs__count">{{ outputCount }}</span>
+                        {{ item.label }}
+                        <span v-if="item.id === 'output' && outputCount" class="tabs__count">{{ outputCount }}</span>
                     </button>
                     <div class="tabs__spacer" />
-                    <button class="btn-ghost" type="button" @click="remountMapper">Restart</button>
+                    <button class="btn-ghost" type="button" @click="remountMapper">{{ t.tabs.restart }}</button>
                 </nav>
 
                 <div class="canvas">
@@ -348,7 +401,7 @@
                                 :default-has-headers="defaultHasHeaders"
                                 :icons="useCustomIcons ? customIcons : undefined"
                                 :messages="useCustomMessages ? customMessages[locale] : undefined"
-                                :matcher="useCustomMatcher ? positionalMatcher : undefined"
+                                :matcher="matchers[matcherMode]"
                                 :auto-ignore="autoIgnore"
                                 :auto-confirm="autoConfirm"
                                 :transform="useTransform && outputMode === 'rows' ? contactTransform : undefined"
@@ -366,34 +419,33 @@
                     <!-- Code -->
                     <div v-show="tab === 'code'" class="canvas__inner">
                         <div class="code-card">
-                            <div class="code-card__head">Template</div>
-                            <pre class="code-card__body">{{ templateSnippet }}</pre>
+                            <div class="code-card__head">{{ t.code.template }}</div>
+                            <CodeBlock :code="templateSnippet" lang="xml" />
                         </div>
                         <div class="code-card">
-                            <div class="code-card__head">Schema</div>
-                            <pre class="code-card__body">{{ fieldsSnippet }}</pre>
+                            <div class="code-card__head">{{ t.code.schema }}</div>
+                            <CodeBlock :code="fieldsSnippet" />
                         </div>
                         <div class="code-card">
-                            <div class="code-card__head"><code>@mapped</code> handler</div>
-                            <pre class="code-card__body">{{ handlerSnippet }}</pre>
+                            <div class="code-card__head">{{ t.code.handler }}</div>
+                            <CodeBlock :code="handlerSnippet" />
                         </div>
                     </div>
 
                     <!-- Output -->
                     <div v-show="tab === 'output'" class="canvas__inner">
                         <div v-if="!hasOutput" class="empty">
-                            <p class="empty__title">No output yet</p>
+                            <p class="empty__title">{{ t.result.empty }}</p>
                             <p class="empty__text">
-                                Upload a file in the preview, map the columns and confirm.
-                                Whatever <code>@mapped</code> emits shows up here.
+                                {{ t.result.emptyBody }}
                             </p>
-                            <button class="btn-solid" type="button" @click="tab = 'preview'">Go to the preview</button>
+                            <button class="btn-solid" type="button" @click="tab = 'preview'">{{ t.result.goPreview }}</button>
                         </div>
 
                         <!-- output="mapping" -->
                         <template v-else-if="mappingResult">
                             <div class="out-note">
-                                <code>output="mapping"</code> — the file was not transformed. This is what you would send to your backend.
+                                <code>output="mapping"</code> — {{ t.result.mappingNote }}
                             </div>
                             <div class="out-grid">
                                 <div class="out-tile">
@@ -404,35 +456,35 @@
                                 <div class="out-tile">
                                     <span class="out-tile__k">hasHeaders</span>
                                     <span class="out-tile__v">{{ mappingResult.hasHeaders }}</span>
-                                    <span class="out-tile__sub">row 1 {{ mappingResult.hasHeaders ? 'is a header' : 'is data' }}</span>
+                                    <span class="out-tile__sub">{{ mappingResult.hasHeaders ? t.result.isHeader : t.result.isData }}</span>
                                 </div>
                                 <div class="out-tile">
                                     <span class="out-tile__k">mapping</span>
                                     <span class="out-tile__v">{{ Object.keys(mappingResult.mapping).length }}</span>
-                                    <span class="out-tile__sub">columns mapped</span>
+                                    <span class="out-tile__sub">{{ t.result.columnsMapped }}</span>
                                 </div>
                             </div>
                             <div class="code-card">
-                                <div class="code-card__head">mapping — spreadsheet column index → field</div>
-                                <pre class="code-card__body">{{ JSON.stringify(mappingResult.mapping, null, 2) }}</pre>
+                                <div class="code-card__head">{{ t.result.mappingCard }}</div>
+                                <CodeBlock :code="JSON.stringify(mappingResult.mapping, null, 2)" lang="typescript" />
                             </div>
                         </template>
 
                         <!-- transform -->
                         <template v-else-if="transformedResult">
                             <div class="out-note">
-                                <code>:transform</code> — {{ transformedResult.length }} rows ready to POST to your API.
+                                <code>:transform</code> — {{ t.result.transformNote.replace('{n}', String(transformedResult.length)) }}
                             </div>
                             <div class="code-card">
-                                <div class="code-card__head">First 3 rows</div>
-                                <pre class="code-card__body">{{ JSON.stringify(transformedResult.slice(0, 3), null, 2) }}</pre>
+                                <div class="code-card__head">{{ t.result.firstRows }}</div>
+                                <CodeBlock :code="JSON.stringify(transformedResult.slice(0, 3), null, 2)" lang="typescript" />
                             </div>
                         </template>
 
                         <!-- rows -->
                         <template v-else-if="result">
                             <div class="out-note">
-                                <code>MappedResult[]</code> — {{ result.length }} columns mapped.
+                                <code>MappedResult[]</code> — {{ t.result.rowsNote.replace('{n}', String(result.length)) }}
                             </div>
                             <div class="out-cols">
                                 <div v-for="col in result" :key="col.field" class="out-col">
@@ -442,8 +494,8 @@
                                 </div>
                             </div>
                             <div class="code-card">
-                                <div class="code-card__head">Data preview</div>
-                                <pre class="code-card__body">{{ resultPreview }}</pre>
+                                <div class="code-card__head">{{ t.result.dataPreview }}</div>
+                                <CodeBlock :code="resultPreview" lang="typescript" />
                             </div>
                         </template>
                     </div>
@@ -464,7 +516,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { SheetMapper, IconUpload, IconFile, IconCheck, IconBan, IconAlert } from '../src/index';
 import type {
     MappedResult, MappingOutput, SchemaField, Locale, Icons,
@@ -472,6 +524,8 @@ import type {
 } from '../src/types';
 
 import { version } from '../package.json';
+import { demoMessages } from './i18n';
+import CodeBlock from './components/CodeBlock.vue';
 import PanelGroup from './components/PanelGroup.vue';
 import SegControl from './components/SegControl.vue';
 
@@ -488,11 +542,44 @@ const asset = (name: string) => `${import.meta.env.BASE_URL}${name}`;
 
 // ─── Option state ────────────────────────────────────────────────────────────
 
+type Theme = 'light' | 'dark' | 'system';
+
+const themes: { value: Theme; titleKey: 'light' | 'dark' | 'system'; path: string; circle?: [number, number, number] }[] = [
+    { value: 'light',  titleKey: 'light',  path: 'M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4', circle: [12, 12, 4] },
+    { value: 'dark',   titleKey: 'dark',   path: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z' },
+    { value: 'system', titleKey: 'system', path: 'M4 4h16v12H4zM8 20h8M12 16v4' },
+];
+
+const theme = ref<Theme>('system');
+
+watch(theme, (value) => {
+    const root = document.documentElement;
+    if (value === 'system') root.removeAttribute('data-theme');
+    else root.dataset.theme = value;
+    try {
+        localStorage.setItem('vsm-demo-theme', value);
+    } catch {
+        // private mode / storage disabled — the choice just does not persist
+    }
+}, { immediate: true });
+
+const locales: { code: Locale; flag: string; name: string }[] = [
+    { code: 'en', flag: '🇬🇧', name: 'English' },
+    { code: 'es', flag: '🇪🇸', name: 'Español' },
+    { code: 'fr', flag: '🇫🇷', name: 'Français' },
+    { code: 'pt', flag: '🇵🇹', name: 'Português' },
+    { code: 'nl', flag: '🇳🇱', name: 'Nederlands' },
+];
+
 const locale = ref<Locale>('en');
+const localeOpen = ref(false);
+const localeMenu = ref<HTMLElement | null>(null);
+const t = computed(() => demoMessages[locale.value]);
+const activeLocale = computed(() => locales.find((l) => l.code === locale.value) ?? locales[0]);
 const fieldsSource = ref<'immediate' | 'api'>('immediate');
 const useCustomIcons = ref(false);
 const useCustomMessages = ref(false);
-const useCustomMatcher = ref(false);
+const matcherMode = ref<'builtin' | 'positional' | 'duplicating'>('builtin');
 const autoIgnore = ref(false);
 const autoConfirm = ref(false);
 const defaultHasHeaders = ref(true);
@@ -506,13 +593,11 @@ const showSnippets = ref(true);
 
 // ─── UI state ────────────────────────────────────────────────────────────────
 
-const tabs = [
-    { id: 'preview', label: 'Preview' },
-    { id: 'code', label: 'Code' },
-    { id: 'output', label: 'Output' },
-] as const;
+const tabIds = ['preview', 'code', 'output'] as const;
+type TabId = (typeof tabIds)[number];
+const tabs = computed(() => tabIds.map((id) => ({ id, label: t.value.tabs[id] })));
 
-const tab = ref<(typeof tabs)[number]['id']>('preview');
+const tab = ref<TabId>('preview');
 const mapperKey = ref(0);
 const lastError = ref<SheetMapperError | null>(null);
 
@@ -570,8 +655,29 @@ watch(fieldsSource, (mode) => {
 watch(outputMode, () => clearOutput());
 
 onMounted(() => {
+    try {
+        const saved = localStorage.getItem('vsm-demo-theme');
+        if (saved === 'light' || saved === 'dark' || saved === 'system') theme.value = saved;
+    } catch {
+        // storage unavailable: fall back to 'system', which is the default anyway
+    }
     if (fieldsSource.value === 'api') loadSchemaFromApi();
+    document.addEventListener('click', closeLocaleOnOutside, true);
+    document.addEventListener('keydown', closeLocaleOnEscape);
 });
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', closeLocaleOnOutside, true);
+    document.removeEventListener('keydown', closeLocaleOnEscape);
+});
+
+function closeLocaleOnOutside(e: MouseEvent) {
+    if (localeOpen.value && !localeMenu.value?.contains(e.target as Node)) localeOpen.value = false;
+}
+
+function closeLocaleOnEscape(e: KeyboardEvent) {
+    if (e.key === 'Escape') localeOpen.value = false;
+}
 
 // ─── Customization examples ──────────────────────────────────────────────────
 
@@ -594,6 +700,20 @@ const positionalMatcher: MatcherFn = (columns, fields) => {
         if (fields[i]) map.set(i, fields[i].key);
     });
     return map;
+};
+
+// Deliberately broken: claims the same field for every column. Exists to show
+// that validate() refuses it instead of letting toRows() drop the data.
+const duplicatingMatcher: MatcherFn = (columns, fields) => {
+    const first = fields[0];
+    if (!first) return new Map<number, string>();
+    return new Map(columns.map((_, i) => [i, first.key]));
+};
+
+const matchers: Record<'builtin' | 'positional' | 'duplicating', MatcherFn | undefined> = {
+    builtin: undefined,
+    positional: positionalMatcher,
+    duplicating: duplicatingMatcher,
 };
 
 const customMessages: Partial<Record<Locale, MessagesOverride>> = {
@@ -651,10 +771,10 @@ const iconPreview = [
 
 const schemaBadge = computed(() => (fieldsSource.value === 'api' ? 1 : 0));
 const appearanceBadge = computed(
-    () => Number(locale.value !== 'en') + Number(useCustomIcons.value) + Number(useCustomMessages.value),
+    () => Number(useCustomIcons.value) + Number(useCustomMessages.value),
 );
 const behaviorBadge = computed(
-    () => Number(useCustomMatcher.value) + Number(autoIgnore.value) + Number(autoConfirm.value)
+    () => Number(matcherMode.value !== 'builtin') + Number(autoIgnore.value) + Number(autoConfirm.value)
         + Number(!defaultHasHeaders.value) + Number(previewRows.value !== 4),
 );
 const outputBadge = computed(() => Number(outputMode.value !== 'rows') + Number(useTransform.value));
@@ -683,7 +803,7 @@ const templateSnippet = computed(() => {
     if (!defaultHasHeaders.value) lines.push('  :default-has-headers="false"');
     if (useCustomIcons.value) lines.push('  :icons="customIcons"');
     if (useCustomMessages.value) lines.push('  :messages="customMessages[locale]"');
-    if (useCustomMatcher.value) lines.push('  :matcher="positionalMatcher"');
+    if (matcherMode.value !== 'builtin') lines.push(`  :matcher="${matcherMode.value === 'positional' ? 'positionalMatcher' : 'duplicatingMatcher'}"`);
     if (autoIgnore.value) lines.push('  :auto-ignore="true"');
     if (autoConfirm.value) lines.push('  :auto-confirm="true"');
     if (useTransform.value && outputMode.value === 'rows') lines.push('  :transform="contactTransform"');
@@ -760,7 +880,17 @@ onMounted(async () => {
 // arrive, without overwriting what the
 // user already set, ignored or cleared.`;
 
-const matcherSnippet = `const positional: MatcherFn = (cols, f) => {
+const matcherSnippet = computed(() =>
+    matcherMode.value === 'duplicating'
+        ? `const duplicating: MatcherFn = (cols, f) => {
+  // el bug: el mismo campo para todas
+  return new Map(cols.map((_, i) => [i, f[0].key]));
+};
+
+// validate() lo detecta y devuelve null:
+// { code: 'DUPLICATE_ASSIGNMENTS',
+//   duplicateFields: ['...'] }`
+        : `const positional: MatcherFn = (cols, f) => {
   const map = new Map<number, string>();
   cols.forEach((_, i) => {
     if (f[i]) map.set(i, f[i].key);
@@ -768,8 +898,9 @@ const matcherSnippet = `const positional: MatcherFn = (cols, f) => {
   return map;
 };
 
-// The Map keys are positions in the
-// \`columns\` array, not col.index.`;
+// Las claves del Map son posiciones
+// del array \`columns\`, no col.index.`,
+);
 
 const messagesSnippet = `const customMessages: Partial<
   Record<Locale, MessagesOverride>
@@ -844,11 +975,10 @@ function remountMapper(): void {
 }
 
 function resetOptions(): void {
-    locale.value = 'en';
     fieldsSource.value = 'immediate';
     useCustomIcons.value = false;
     useCustomMessages.value = false;
-    useCustomMatcher.value = false;
+    matcherMode.value = 'builtin';
     autoIgnore.value = false;
     autoConfirm.value = false;
     defaultHasHeaders.value = true;
@@ -876,15 +1006,72 @@ function formatBytes(bytes: number): string {
     --d-text: #101828;
     --d-text-dim: #667085;
     --d-text-faint: #98a2b3;
-    --d-accent: #4f46e5;
-    --d-accent-soft: #eef2ff;
+    --d-accent: #0f8a5f;
+    --d-accent-soft: #e6f7ef;
     --d-hover: #f7f8fa;
     --d-code-bg: #1e1e2e;
     --d-code-fg: #cdd6f4;
-    --d-topbar: #16181d;
+
+    /* Chrome is dark in every theme — it is the tool, not the content. */
+    --d-chrome: #16181d;
+    --d-chrome-line: #262a33;
+    --d-chrome-text: #e6e9ef;
+    --d-chrome-dim: #98a2b3;
+    --d-chrome-faint: #6b7480;
+    --d-chrome-hover: rgba(255, 255, 255, 0.06);
+    --d-chrome-accent: #42b883;
+    --d-chrome-accent-soft: rgba(66, 184, 131, 0.2);
+    --d-chrome-group: #1e222a;
+    --d-chrome-group-hover: #262b35;
+
     --d-sidebar-w: 332px;
     --d-topbar-h: 52px;
     --d-tabs-h: 48px;
+}
+
+/* The dark palette lives in one place; both selectors below pull it in. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --d-bg: #0d0f13;
+        --d-surface: #16181d;
+        --d-line: #262a33;
+        --d-text: #e6e9ef;
+        --d-text-dim: #98a2b3;
+        --d-text-faint: #6b7480;
+        --d-accent: #42b883;
+        --d-accent-soft: rgba(66, 184, 131, 0.18);
+        --d-hover: rgba(255, 255, 255, 0.05);
+        --d-code-bg: #11131a;
+        --d-code-fg: #cdd6f4;
+    }
+}
+
+:root[data-theme='dark'] {
+    --d-bg: #0d0f13;
+    --d-surface: #16181d;
+    --d-line: #262a33;
+    --d-text: #e6e9ef;
+    --d-text-dim: #98a2b3;
+    --d-text-faint: #6b7480;
+    --d-accent: #42b883;
+    --d-accent-soft: rgba(66, 184, 131, 0.18);
+    --d-hover: rgba(255, 255, 255, 0.05);
+    --d-code-bg: #11131a;
+    --d-code-fg: #cdd6f4;
+}
+
+/* The library is themed through its own custom properties — the demo doubles
+   as proof that a dark skin needs no component changes. */
+:root[data-theme='dark'] .vsm,
+:root[data-theme='dark'] .stage {
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .vsm,
+    :root:not([data-theme='light']) .stage {
+        color-scheme: dark;
+    }
 }
 
 * { box-sizing: border-box; }
@@ -911,7 +1098,7 @@ body {
 .topbar {
     height: var(--d-topbar-h);
     flex-shrink: 0;
-    background: var(--d-topbar);
+    background: var(--d-chrome);
     color: #fff;
     display: flex;
     align-items: center;
@@ -941,8 +1128,8 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #a5b4fc;
-    background: rgba(99, 102, 241, 0.18);
+    color: #42b883;
+    background: rgba(66, 184, 131, 0.16);
     padding: 3px 7px;
     border-radius: 4px;
 }
@@ -953,6 +1140,163 @@ body {
     gap: 10px;
 }
 
+.topbar__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #d0d5dd;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.topbar__action:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.topbar__action--on {
+    background: rgba(66, 184, 131, 0.18);
+    border-color: rgba(66, 184, 131, 0.5);
+    color: #6ee7b7;
+}
+
+.theme {
+    display: inline-flex;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    padding: 2px;
+}
+
+.theme__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 24px;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: #98a2b3;
+    cursor: pointer;
+    padding: 0;
+}
+
+.theme__btn:hover { color: #fff; }
+
+.theme__btn--on {
+    background: rgba(66, 184, 131, 0.2);
+    color: #6ee7b7;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Dark skin for the library, applied purely through its public custom
+   properties — no component code is involved. */
+:root[data-theme='dark'] .stage .vsm {
+    --vsm-text-color: #e6e9ef;
+    --vsm-muted-color: #98a2b3;
+    --vsm-border-color: #2f3441;
+    --vsm-card-bg: #1b1e25;
+    --vsm-dropzone-bg: #14161c;
+    --vsm-dropzone-hover-bg: #1b2030;
+    --vsm-input-bg: #1b1e25;
+    --vsm-primary: #3b82f6;
+    --vsm-primary-hover: #60a5fa;
+    --vsm-link-color: #60a5fa;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .stage .vsm {
+        --vsm-text-color: #e6e9ef;
+        --vsm-muted-color: #98a2b3;
+        --vsm-border-color: #2f3441;
+        --vsm-card-bg: #1b1e25;
+        --vsm-dropzone-bg: #14161c;
+        --vsm-dropzone-hover-bg: #1b2030;
+        --vsm-input-bg: #1b1e25;
+        --vsm-primary: #3b82f6;
+        --vsm-primary-hover: #60a5fa;
+        --vsm-link-color: #60a5fa;
+    }
+}
+
+.lang {
+    position: relative;
+}
+
+.lang__flag {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.lang__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 60;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    min-width: 168px;
+    background: #1c1f26;
+    border: 1px solid #2c3038;
+    border-radius: 9px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+.lang__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font: inherit;
+    font-size: 13px;
+    color: #d0d5dd;
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    padding: 7px 9px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.lang__item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.lang__item--on {
+    color: #6ee7b7;
+    background: rgba(66, 184, 131, 0.16);
+}
+
+.topbar__sep {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 0 2px;
+}
+
 .topbar__version {
     font-size: 12px;
     color: #98a2b3;
@@ -960,19 +1304,24 @@ body {
 }
 
 .topbar__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
     color: #d0d5dd;
     text-decoration: none;
-    padding: 6px 10px;
+    padding: 5px 10px;
     border-radius: 6px;
+    border: 1px solid transparent;
 }
 
 .topbar__link:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
 
-.topbar__link--solid {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
+.topbar__link--npm svg { color: #cb3837; }
+.topbar__link--npm:hover { border-color: rgba(203, 56, 55, 0.55); }
+
+.topbar__link--gh svg { color: #fff; }
+.topbar__link--gh:hover { border-color: rgba(255, 255, 255, 0.28); }
 
 /* ─── Layout ──────────────────────────────────────────────────────────── */
 
@@ -983,10 +1332,24 @@ body {
 }
 
 .sidebar {
+    /* Redefining the shared tokens here is what makes every nested control —
+       PanelGroup, SegControl, selects — go dark without touching their CSS. */
+    --d-surface: var(--d-chrome);
+    --d-line: var(--d-chrome-line);
+    --d-text: var(--d-chrome-text);
+    --d-text-dim: var(--d-chrome-dim);
+    --d-text-faint: var(--d-chrome-faint);
+    --d-hover: var(--d-chrome-hover);
+    --d-accent: var(--d-chrome-accent);
+    --d-accent-soft: var(--d-chrome-accent-soft);
+    --d-group-head: var(--d-chrome-group);
+    --d-group-head-hover: var(--d-chrome-group-hover);
+
     width: var(--d-sidebar-w);
     flex-shrink: 0;
-    background: var(--d-surface);
-    border-right: 1px solid var(--d-line);
+    background: var(--d-chrome);
+    border-right: 1px solid var(--d-chrome-line);
+    color: var(--d-chrome-text);
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -1192,10 +1555,10 @@ body {
 .seg__btn:hover:not(.seg__btn--on) { color: var(--d-text); }
 
 .seg__btn--on {
-    background: var(--d-surface);
-    color: var(--d-text);
-    font-weight: 600;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+    background: #42b883;
+    color: #06231a;
+    font-weight: 650;
+    box-shadow: 0 1px 2px rgba(6, 35, 26, 0.25);
 }
 
 .select {
@@ -1289,22 +1652,6 @@ body {
 
 /* ─── Snippets ────────────────────────────────────────────────────────── */
 
-.snippet {
-    margin: 0;
-    background: var(--d-code-bg);
-    color: var(--d-code-fg);
-    border-radius: 8px;
-    padding: 11px 12px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 10px;
-    line-height: 1.65;
-    /* Wrap instead of clipping: the sidebar is narrow and a cut-off
-       snippet reads as broken code. Lines are kept short enough that
-       this rarely triggers. */
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-
 .icon-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1352,18 +1699,6 @@ body {
 .code-card__head code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 11px;
-}
-
-.code-card__body {
-    margin: 0;
-    background: var(--d-code-bg);
-    color: var(--d-code-fg);
-    padding: 16px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
-    line-height: 1.65;
-    overflow-x: auto;
-    white-space: pre;
 }
 
 /* ─── Output ──────────────────────────────────────────────────────────── */
@@ -1471,8 +1806,8 @@ body {
     align-items: center;
     gap: 10px;
     max-width: 480px;
-    background: var(--d-topbar);
-    border: 1px solid #2c3038;
+    background: var(--d-chrome);
+    border: 1px solid var(--d-chrome-line);
     color: #d0d5dd;
     border-radius: 10px;
     padding: 11px 13px;
@@ -1514,6 +1849,8 @@ body {
 /* ─── Responsive ──────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
+    .topbar__action span { display: none; }
+    .topbar__action { padding: 6px 8px; }
     .app { height: auto; overflow: visible; }
     .body { flex-direction: column; }
     .sidebar { width: 100%; border-right: 0; border-bottom: 1px solid var(--d-line); }

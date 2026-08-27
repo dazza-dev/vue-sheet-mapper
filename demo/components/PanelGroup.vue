@@ -30,8 +30,8 @@ const open = ref(props.defaultOpen);
 </script>
 
 <style>
-.pg {
-    border-bottom: 1px solid var(--d-line);
+.pg + .pg {
+    margin-top: 1px;
 }
 
 .pg__head {
@@ -39,28 +39,30 @@ const open = ref(props.defaultOpen);
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 13px 16px;
-    background: none;
+    padding: 11px 16px;
+    /* Its own band, so the groups read as sections instead of one long list. */
+    background: var(--d-group-head, transparent);
     border: 0;
+    border-top: 1px solid var(--d-line);
+    border-bottom: 1px solid var(--d-line);
     cursor: pointer;
     font: inherit;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--d-text-dim);
+    color: var(--d-text);
     text-align: left;
 }
 
 .pg__head:hover {
-    color: var(--d-text);
-    background: var(--d-hover);
+    background: var(--d-group-head-hover, var(--d-hover));
 }
 
 .pg__chevron {
     flex-shrink: 0;
     transition: transform 0.18s ease;
-    color: var(--d-text-faint);
+    color: var(--d-text-dim);
 }
 
 .pg--open .pg__chevron {
@@ -87,7 +89,7 @@ const open = ref(props.defaultOpen);
 }
 
 .pg__body {
-    padding: 2px 16px 16px;
+    padding: 14px 16px 18px;
     display: flex;
     flex-direction: column;
     gap: 16px;
