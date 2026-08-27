@@ -30,6 +30,7 @@ const pt: Messages = {
         emptyWorksheet: 'A planilha está vazia.',
         unassignedColumns: 'Por favor atribua ou ignore todas as colunas:',
         missingRequiredFields: 'Os seguintes campos obrigatórios não estão mapeados:',
+        duplicateAssignments: 'O mesmo campo está mapeado para mais de uma coluna:',
         fileTooLarge: 'O arquivo é muito grande. Tamanho máximo: {size}.',
         tooManyRows: 'O arquivo tem linhas demais. Máximo permitido: {max}.',
         dismiss: 'Fechar erro',

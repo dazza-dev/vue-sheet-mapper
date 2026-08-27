@@ -75,6 +75,7 @@ export type SheetMapperErrorCode =
     | 'TOO_MANY_ROWS'
     | 'UNASSIGNED_COLUMNS'
     | 'MISSING_REQUIRED_FIELDS'
+    | 'DUPLICATE_ASSIGNMENTS'
     | 'NO_FILE';
 
 export interface SheetMapperError {
@@ -84,6 +85,8 @@ export interface SheetMapperError {
     missingFields?: string[];
     /** Column names that have no assignment (only for UNASSIGNED_COLUMNS). */
     unassignedColumns?: string[];
+    /** Field keys assigned to more than one column (only for DUPLICATE_ASSIGNMENTS). */
+    duplicateFields?: string[];
     /** Human-readable max size string, e.g. "5 MB" (only for FILE_TOO_LARGE). */
     maxSize?: string;
     /** Actual row count found (only for TOO_MANY_ROWS). */
@@ -170,6 +173,7 @@ export interface MessagesOverride {
         emptyWorksheet: string;
         unassignedColumns: string;
         missingRequiredFields: string;
+        duplicateAssignments: string;
         fileTooLarge: string;
         tooManyRows?: string;
         dismiss?: string;
@@ -207,6 +211,7 @@ export interface Messages {
         emptyWorksheet: string;
         unassignedColumns: string;
         missingRequiredFields: string;
+        duplicateAssignments: string;
         /** Use {size} as placeholder for the human-readable limit (e.g. "5 MB"). */
         fileTooLarge: string;
         /** Use {max} as placeholder for the row limit. */

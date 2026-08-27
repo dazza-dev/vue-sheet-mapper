@@ -84,17 +84,20 @@ export function useSheetMapper(
     fields: MaybeRefOrGetter<SchemaField[]>,
     options: UseSheetMapperOptions = {}
 ): UseSheetMapperReturn {
-    const previewRows = options.previewRows ?? 5;
-    const columnLabel = options.columnLabel ?? ((i: number) => `Column ${i + 1}`);
-    const matchFn: MatcherFn = options.matcher ?? autoMatch;
+    // Read through to `options` on every use instead of capturing: these arrive
+    // as component props, and a prop that silently keeps its mount-time value is
+    // a bug the consumer cannot see.
+    const previewRows = () => options.previewRows ?? 5;
+    const columnLabel = (i: number) => (options.columnLabel ?? ((n: number) => `Column ${n + 1}`))(i);
+    const matchFn = (): MatcherFn => options.matcher ?? autoMatch;
 
     const loading = ref(false);
     const error = ref<SheetMapperError | null>(null);
     // shallowRef: a File is an opaque handle. Deep reactivity would hand consumers
     // a Proxy instead of the File itself, which FormData and fetch reject.
     const file = shallowRef<File | null>(null);
-    const defaultHasHeaders = options.defaultHasHeaders ?? true;
-    const hasHeaders = ref(defaultHasHeaders);
+    const defaultHasHeaders = () => options.defaultHasHeaders ?? true;
+    const hasHeaders = ref(defaultHasHeaders());
     const columns = ref<ColumnState[]>([]);
 
     // Raw parsed columns kept so we can re-apply hasHeaders toggle
@@ -110,7 +113,7 @@ export function useSheetMapper(
         return parsed.map((col, i) => ({
             index: col.index,
             name: col.name,
-            previewData: col.data.slice(0, previewRows),
+            previewData: col.data.slice(0, previewRows()),
             data: col.data,
             assignedKey: matches.get(i) ?? (options.autoIgnore ? 'ignore' : null),
         }));
@@ -154,9 +157,9 @@ export function useSheetMapper(
         }
 
         file.value = f;
-        hasHeaders.value = defaultHasHeaders;
+        hasHeaders.value = defaultHasHeaders();
 
-        const matches = matchFn(rawParsed, toValue(fields));
+        const matches = matchFn()(rawParsed, toValue(fields));
         columns.value = buildColumnStates(rawParsed, matches);
         touched.clear();
         loading.value = false;
@@ -214,7 +217,7 @@ export function useSheetMapper(
                 const newName = columnLabel(i);
                 col.data = newData;
                 col.name = newName;
-                col.previewData = newData.slice(0, previewRows);
+                col.previewData = newData.slice(0, previewRows());
                 rawParsed[i] = { index: rawParsed[i].index, name: newName, data: newData };
             });
             hasHeaders.value = false;
@@ -225,7 +228,7 @@ export function useSheetMapper(
                 const newData = col.data.slice(1);
                 col.name = newName;
                 col.data = newData;
-                col.previewData = newData.slice(0, previewRows);
+                col.previewData = newData.slice(0, previewRows());
                 rawParsed[i] = { index: rawParsed[i].index, name: newName, data: newData };
             });
             hasHeaders.value = true;
@@ -246,7 +249,7 @@ export function useSheetMapper(
                 }
             });
 
-            const matches = matchFn(rawParsed, newFields);
+            const matches = matchFn()(rawParsed, newFields);
             columns.value.forEach((col, i) => {
                 if (touched.has(i)) return;
                 const key = matches.get(i);
@@ -296,6 +299,25 @@ export function useSheetMapper(
             return null;
         }
 
+        // No field may be claimed by two columns. assignField prevents it, but a
+        // custom `matcher` can return a Map that does — and toRows would then
+        // silently drop one of the columns.
+        const seen = new Set<string>();
+        const duplicates = new Set<string>();
+        columns.value.forEach((c) => {
+            if (!c.assignedKey || c.assignedKey === 'ignore') return;
+            if (seen.has(c.assignedKey)) duplicates.add(c.assignedKey);
+            seen.add(c.assignedKey);
+        });
+        if (duplicates.size > 0) {
+            error.value = {
+                code: 'DUPLICATE_ASSIGNMENTS',
+                message: 'The same field is assigned to more than one column.',
+                duplicateFields: [...duplicates],
+            };
+            return null;
+        }
+
         // All required fields must be mapped
         const missing = missingRequiredFields.value.map((f) => f.key);
         if (missing.length > 0) {
@@ -324,7 +346,7 @@ export function useSheetMapper(
         touched.clear();
         error.value = null;
         rawParsed = [];
-        hasHeaders.value = defaultHasHeaders;
+        hasHeaders.value = defaultHasHeaders();
     }
 
     return {

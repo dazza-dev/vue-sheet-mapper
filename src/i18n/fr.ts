@@ -30,6 +30,7 @@ const fr: Messages = {
         emptyWorksheet: 'La feuille est vide.',
         unassignedColumns: 'Veuillez assigner ou ignorer toutes les colonnes:',
         missingRequiredFields: 'Les champs obligatoires suivants ne sont pas assignés:',
+        duplicateAssignments: 'Le même champ est associé à plusieurs colonnes :',
         fileTooLarge: 'Le fichier est trop volumineux. Taille maximale : {size}.',
         tooManyRows: 'Le fichier contient trop de lignes. Maximum autorisé : {max}.',
         dismiss: "Fermer l'erreur",

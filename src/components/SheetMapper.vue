@@ -179,14 +179,16 @@ const {
     validate,
     reset,
 } = useSheetMapper(() => props.fields, {
-    previewRows: props.previewRows,
+    // Getters, not values: a plain object literal would freeze each prop at its
+    // mount-time value and later changes would be ignored without a trace.
+    get previewRows() { return props.previewRows; },
     columnLabel: (i) => msgs.value.columns.columnFallback.replace('{n}', String(i + 1)),
-    matcher: props.matcher,
-    autoIgnore: props.autoIgnore,
-    maxFileSize: props.maxFileSize,
-    maxRows: props.maxRows,
-    defaultHasHeaders: props.defaultHasHeaders,
-    encoding: props.encoding,
+    get matcher() { return props.matcher; },
+    get autoIgnore() { return props.autoIgnore; },
+    get maxFileSize() { return props.maxFileSize; },
+    get maxRows() { return props.maxRows; },
+    get defaultHasHeaders() { return props.defaultHasHeaders; },
+    get encoding() { return props.encoding; },
 });
 
 const errorMessage = computed(() => {
@@ -202,6 +204,7 @@ const errorMessage = computed(() => {
         case 'EMPTY_WORKSHEET': return m.emptyWorksheet;
         case 'UNASSIGNED_COLUMNS': return m.unassignedColumns;
         case 'MISSING_REQUIRED_FIELDS': return m.missingRequiredFields;
+        case 'DUPLICATE_ASSIGNMENTS': return m.duplicateAssignments;
         case 'NO_FILE': return m.noFile;
         default: return e.message;
     }
@@ -211,6 +214,11 @@ const errorList = computed<string[]>(() => {
     if (!error.value) return [];
     if (error.value.missingFields) {
         return error.value.missingFields.map(
+            (k) => props.fields.find((f) => f.key === k)?.label ?? k,
+        );
+    }
+    if (error.value.duplicateFields) {
+        return error.value.duplicateFields.map(
             (k) => props.fields.find((f) => f.key === k)?.label ?? k,
         );
     }
@@ -307,7 +315,7 @@ function handleValidate() {
 }
 
 .vsm-btn--secondary {
-    background: #fff;
+    background: var(--vsm-card-bg, #fff);
     border-color: var(--vsm-border-color, #e5e7eb);
     color: var(--vsm-text-color, #111827);
 }

@@ -30,6 +30,7 @@ const nl: Messages = {
         emptyWorksheet: 'Het werkblad is leeg.',
         unassignedColumns: 'Wijs alle kolommen toe of negeer ze:',
         missingRequiredFields: 'De volgende vereiste velden zijn niet toegewezen:',
+        duplicateAssignments: 'Hetzelfde veld is aan meerdere kolommen gekoppeld:',
         fileTooLarge: 'Het bestand is te groot. Maximale grootte: {size}.',
         tooManyRows: 'Het bestand heeft te veel rijen. Maximum toegestaan: {max}.',
         dismiss: 'Foutmelding sluiten',

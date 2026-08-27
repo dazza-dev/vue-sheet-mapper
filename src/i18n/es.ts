@@ -30,6 +30,7 @@ const es: Messages = {
         emptyWorksheet: 'La hoja está vacía.',
         unassignedColumns: 'Por favor asigna o ignora todas las columnas:',
         missingRequiredFields: 'Los siguientes campos requeridos no están asignados:',
+        duplicateAssignments: 'El mismo campo está asignado a más de una columna:',
         fileTooLarge: 'El archivo es demasiado grande. Tamaño máximo: {size}.',
         tooManyRows: 'El archivo tiene demasiadas filas. Máximo permitido: {max}.',
         dismiss: 'Cerrar error',

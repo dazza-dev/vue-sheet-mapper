@@ -30,6 +30,7 @@ const en: Messages = {
         emptyWorksheet: 'The worksheet is empty.',
         unassignedColumns: 'Please assign or ignore all columns:',
         missingRequiredFields: 'The following required fields are not mapped:',
+        duplicateAssignments: 'The same field is mapped to more than one column:',
         fileTooLarge: 'File is too large. Maximum size: {size}.',
         tooManyRows: 'File has too many rows. Maximum allowed: {max}.',
         dismiss: 'Dismiss error',
