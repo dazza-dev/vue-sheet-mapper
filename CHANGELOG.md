@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the two into one, silently dropping a column's data. It fails with the new
   `DUPLICATE_ASSIGNMENTS` code instead, listing every duplicated field.
 
+### Breaking changes
+
+- **`SchemaField.required` is now `SchemaField.requireColumn`.** The flag has
+  always checked whether a column is mapped to the field, never whether a row
+  carries a value — a blank cell in a required field passed validation. Every
+  schema library spells the row-level question `required`, so the old name
+  promised a check the library does not perform. Rename the property in your
+  schemas; nothing else changes. The new README section draws the line between
+  mapping checks and record checks.
+
 ### Changed
 
 - **The `xlsx` peer range is now `>=0.18.0`** (was `^0.18.0`), so the patched
