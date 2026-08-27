@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`validate()` now rejects duplicate assignments.** `assignField` already
+  prevented one field from being claimed by two columns, but a custom `matcher`
+  could return a `Map` that did. Validation passed, and `toRows()` then collapsed
+  the two into one, silently dropping a column's data. It fails with the new
+  `DUPLICATE_ASSIGNMENTS` code instead, listing every duplicated field.
+
+### Changed
+
+- **The `xlsx` peer range is now `>=0.18.0`** (was `^0.18.0`), so the patched
+  SheetJS builds distributed outside npm satisfy it. The npm release of `xlsx`
+  is stuck at `0.18.5` and carries two unfixed high-severity advisories; the
+  README's new Security section explains what to install and why. Verified
+  against SheetJS 0.20.3 — the whole suite passes unchanged.
+
 ## [2.0.1] — 2026-08-26
 
 No code changes — the published package is identical to 2.0.0.
