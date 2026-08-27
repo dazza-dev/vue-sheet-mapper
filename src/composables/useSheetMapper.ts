@@ -144,7 +144,7 @@ export function useSheetMapper(
         }
 
         if (options.maxRows !== undefined) {
-            const rowCount = rawParsed[0]?.data.length ?? 0;
+            const rowCount = rawParsed[0].data.length;
             if (rowCount > options.maxRows) {
                 error.value = {
                     code: 'TOO_MANY_ROWS',

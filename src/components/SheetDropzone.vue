@@ -3,6 +3,8 @@
         <slot :open="open" :is-dragging="isDragging" :file="file">
             <div
                 class="vsm-dropzone__area"
+                role="group"
+                :aria-label="messages.dropzone.title"
                 :class="{ 'vsm-dropzone__area--over': isDragging, 'vsm-dropzone__area--has-file': !!file }"
                 @dragover.prevent="isDragging = true"
                 @dragleave.prevent="isDragging = false"
@@ -10,7 +12,7 @@
             >
                 <template v-if="!file">
                     <div class="vsm-dropzone__icon">
-                        <component :is="resolvedIcons.upload" width="48" height="48" />
+                        <component :is="resolvedIcons.upload" width="48" height="48" aria-hidden="true" />
                     </div>
                     <p class="vsm-dropzone__title">{{ messages.dropzone.title }}</p>
                     <p class="vsm-dropzone__subtitle">{{ messages.dropzone.subtitle }}</p>
@@ -21,7 +23,7 @@
 
                 <template v-else>
                     <div class="vsm-dropzone__icon vsm-dropzone__icon--success">
-                        <component :is="resolvedIcons.file" width="48" height="48" />
+                        <component :is="resolvedIcons.file" width="48" height="48" aria-hidden="true" />
                     </div>
                     <p class="vsm-dropzone__filename">{{ file.name }}</p>
                     <button type="button" class="vsm-btn vsm-btn--secondary" @click="$emit('reset')">
@@ -36,6 +38,7 @@
             ref="inputRef"
             type="file"
             :accept="accept"
+            :aria-label="messages.dropzone.button"
             class="vsm-dropzone__input"
             @change="onInputChange"
         />
@@ -89,8 +92,18 @@ defineExpose({ open });
 </script>
 
 <style scoped>
+/* Visually hidden but still focusable and announced: display:none would drop
+   the input out of the accessibility tree entirely. */
 .vsm-dropzone__input {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .vsm-dropzone__area {
@@ -100,43 +113,43 @@ defineExpose({ open });
     justify-content: center;
     gap: 12px;
     padding: 48px 24px;
-    border: 2px dashed var(--vsm-border-color, #d1d5db);
-    border-radius: var(--vsm-radius, 8px);
-    background: var(--vsm-dropzone-bg, #f9fafb);
+    border: 2px dashed var(--vsm-border-color);
+    border-radius: var(--vsm-radius);
+    background: var(--vsm-dropzone-bg);
     text-align: center;
     transition: border-color 0.15s, background 0.15s;
     cursor: pointer;
 }
 
 .vsm-dropzone__area--over {
-    border-color: var(--vsm-primary, #3b82f6);
-    background: var(--vsm-dropzone-hover-bg, #eff6ff);
+    border-color: var(--vsm-primary);
+    background: var(--vsm-dropzone-hover-bg);
 }
 
 .vsm-dropzone__icon {
-    color: var(--vsm-muted-color, #9ca3af);
+    color: var(--vsm-muted-color);
 }
 
 .vsm-dropzone__icon--success {
-    color: var(--vsm-primary, #3b82f6);
+    color: var(--vsm-primary);
 }
 
 .vsm-dropzone__title {
     margin: 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--vsm-text-color, #111827);
+    color: var(--vsm-text-color);
 }
 
 .vsm-dropzone__subtitle {
     margin: 0;
     font-size: 0.875rem;
-    color: var(--vsm-muted-color, #6b7280);
+    color: var(--vsm-muted-color);
 }
 
 .vsm-dropzone__filename {
     margin: 0;
     font-weight: 500;
-    color: var(--vsm-text-color, #111827);
+    color: var(--vsm-text-color);
 }
 </style>

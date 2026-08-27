@@ -1,18 +1,18 @@
 <template>
-    <div class="vsm-card" :class="cardClass">
+    <div class="vsm-card" :class="cardClass" role="listitem" :aria-label="cardLabel">
         <!-- Header -->
         <div class="vsm-card__header">
             <slot name="header" :column="column" :field="assignedField" :clear="() => emit('clear')">
                 <template v-if="column.assignedKey === null">
                     <span class="vsm-card__status vsm-card__status--unassigned">
-                        <component :is="resolvedIcons.unassigned" width="16" height="16" class="vsm-card__status-icon" />
+                        <component :is="resolvedIcons.unassigned" width="16" height="16" class="vsm-card__status-icon" aria-hidden="true" />
                         {{ messages.columns.unassigned }}
                     </span>
                 </template>
 
                 <template v-else-if="column.assignedKey === 'ignore'">
                     <span class="vsm-card__status vsm-card__status--ignored">
-                        <component :is="resolvedIcons.ignored" width="16" height="16" class="vsm-card__status-icon" />
+                        <component :is="resolvedIcons.ignored" width="16" height="16" class="vsm-card__status-icon" aria-hidden="true" />
                         {{ messages.columns.ignored }}
                     </span>
                     <button class="vsm-card__change-link" type="button" @click="emit('clear')">
@@ -22,7 +22,7 @@
 
                 <template v-else>
                     <span class="vsm-card__status vsm-card__status--assigned">
-                        <component :is="resolvedIcons.assigned" width="16" height="16" class="vsm-card__status-icon" />
+                        <component :is="resolvedIcons.assigned" width="16" height="16" class="vsm-card__status-icon" aria-hidden="true" />
                         {{ assignedField?.label ?? column.assignedKey }}
                     </span>
                     <button class="vsm-card__change-link" type="button" @click="emit('clear')">
@@ -122,6 +122,14 @@ const cardClass = computed(() => ({
     'vsm-card--assigned': props.column.assignedKey !== null && props.column.assignedKey !== 'ignore',
 }));
 
+/** Names the card in a list, so its state is announced without reading inside it. */
+const cardLabel = computed(() => {
+    const name = props.column.name || '—';
+    if (props.column.assignedKey === null) return `${name} — ${props.messages.columns.unassigned}`;
+    if (props.column.assignedKey === 'ignore') return `${name} — ${props.messages.columns.ignored}`;
+    return `${name} — ${assignedField.value?.label ?? props.column.assignedKey}`;
+});
+
 function onSelectChange(e: Event) {
     const val = (e.target as HTMLSelectElement).value;
     if (!val) return;
@@ -141,20 +149,20 @@ function onSelectChange(e: Event) {
     min-width: 220px;
     max-width: 280px;
     flex-shrink: 0;
-    border: 2px solid var(--vsm-border-color, #e5e7eb);
-    border-radius: var(--vsm-radius, 8px);
-    background: var(--vsm-card-bg, #fff);
+    border: 2px solid var(--vsm-border-color);
+    border-radius: var(--vsm-radius);
+    background: var(--vsm-card-bg);
     padding: 16px;
     gap: 12px;
     transition: border-color 0.15s;
 }
 
 .vsm-card--assigned {
-    border-color: var(--vsm-success-color, #22c55e);
+    border-color: var(--vsm-success-color);
 }
 
 .vsm-card--ignored {
-    border-color: var(--vsm-warning-color, #f59e0b);
+    border-color: var(--vsm-warning-color);
     opacity: 0.75;
 }
 
@@ -174,15 +182,15 @@ function onSelectChange(e: Event) {
 }
 
 .vsm-card__status--unassigned {
-    color: var(--vsm-danger-color, #ef4444);
+    color: var(--vsm-danger-color);
 }
 
 .vsm-card__status--assigned {
-    color: var(--vsm-success-color, #16a34a);
+    color: var(--vsm-success-color);
 }
 
 .vsm-card__status--ignored {
-    color: var(--vsm-warning-color, #d97706);
+    color: var(--vsm-warning-color);
 }
 
 .vsm-card__status-icon {
@@ -196,7 +204,7 @@ function onSelectChange(e: Event) {
     padding: 0;
     cursor: pointer;
     font-size: 0.8125rem;
-    color: var(--vsm-link-color, #3b82f6);
+    color: var(--vsm-link-color);
     text-decoration: underline;
     text-align: left;
 }
@@ -204,7 +212,7 @@ function onSelectChange(e: Event) {
 .vsm-card__column-name {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--vsm-text-color, #111827);
+    color: var(--vsm-text-color);
     word-break: break-word;
 }
 
@@ -216,17 +224,17 @@ function onSelectChange(e: Event) {
 
 .vsm-card__select-label {
     font-size: 0.8125rem;
-    color: var(--vsm-muted-color, #6b7280);
+    color: var(--vsm-muted-color);
 }
 
 .vsm-card__select {
     width: 100%;
     padding: 6px 8px;
-    border: 1px solid var(--vsm-border-color, #d1d5db);
-    border-radius: var(--vsm-radius-sm, 4px);
-    background: var(--vsm-input-bg, #fff);
+    border: 1px solid var(--vsm-border-color);
+    border-radius: var(--vsm-radius-sm);
+    background: var(--vsm-input-bg);
     font-size: 0.875rem;
-    color: var(--vsm-text-color, #111827);
+    color: var(--vsm-text-color);
     cursor: pointer;
 }
 
@@ -243,8 +251,8 @@ function onSelectChange(e: Event) {
 .vsm-card__cell {
     padding: 6px 0;
     font-size: 0.8125rem;
-    color: var(--vsm-text-color, #374151);
-    border-bottom: 1px solid var(--vsm-border-color, #f3f4f6);
+    color: var(--vsm-text-color);
+    border-bottom: 1px solid var(--vsm-border-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -252,6 +260,6 @@ function onSelectChange(e: Event) {
 }
 
 .vsm-card__cell--empty {
-    color: var(--vsm-muted-color, #9ca3af);
+    color: var(--vsm-muted-color);
 }
 </style>

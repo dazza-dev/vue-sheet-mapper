@@ -831,13 +831,17 @@ Reject files with too many rows after parsing with `maxRows`. Useful when your b
 
 All visual properties are exposed as CSS custom properties on the `.vsm` root element. Override them from your app CSS — no SCSS required.
 
+The defaults meet WCAG AA contrast (4.5:1) against a white background. If you
+override the colours, keep that in mind — the text colours below are read as
+text, not just used as borders.
+
 ```css
 .vsm {
-  --vsm-primary: #3b82f6;
-  --vsm-primary-hover: #2563eb;
-  --vsm-success-color: #16a34a;
-  --vsm-warning-color: #d97706;
-  --vsm-danger-color: #ef4444;
+  --vsm-primary: #2563eb;
+  --vsm-primary-hover: #1d4ed8;
+  --vsm-success-color: #15803d;
+  --vsm-warning-color: #b45309;
+  --vsm-danger-color: #dc2626;
   --vsm-text-color: #111827;
   --vsm-muted-color: #6b7280;
   --vsm-border-color: #e5e7eb;
@@ -845,7 +849,7 @@ All visual properties are exposed as CSS custom properties on the `.vsm` root el
   --vsm-dropzone-bg: #f9fafb;
   --vsm-dropzone-hover-bg: #eff6ff;
   --vsm-input-bg: #ffffff;
-  --vsm-link-color: #3b82f6;
+  --vsm-link-color: #2563eb;
   --vsm-radius: 8px;
   --vsm-radius-sm: 4px;
 }

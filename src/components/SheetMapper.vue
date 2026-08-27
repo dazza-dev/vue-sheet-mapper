@@ -1,5 +1,5 @@
 <template>
-    <div class="vsm">
+    <div class="vsm" :aria-busy="loading">
         <!-- Step 1: Dropzone -->
         <template v-if="!hasFile">
             <SheetDropzone
@@ -21,7 +21,7 @@
             <!-- Toolbar -->
             <div class="vsm__toolbar">
                 <button type="button" class="vsm-btn vsm-btn--secondary vsm__change-file" @click="reset">
-                    <component :is="resolvedIcons.file" width="16" height="16" />
+                    <component :is="resolvedIcons.file" width="16" height="16" aria-hidden="true" />
                     {{ file?.name }}
                 </button>
                 <button type="button" class="vsm-btn vsm-btn--ghost" :aria-pressed="hasHeaders" @click="toggleHeaders">
@@ -44,7 +44,7 @@
             </div>
 
             <!-- Column cards (horizontal scroll) -->
-            <div class="vsm__columns">
+            <div class="vsm__columns" role="list">
                 <ColumnCard
                     v-for="(col, i) in columns"
                     :key="i"
@@ -71,7 +71,7 @@
             <div class="vsm__footer">
                 <slot name="confirm" :validate="handleValidate" :loading="loading">
                     <button type="button" class="vsm-btn vsm-btn--primary vsm-btn--lg" :disabled="loading" @click="handleValidate">
-                        <component :is="resolvedIcons.confirm" width="18" height="18" />
+                        <component :is="resolvedIcons.confirm" width="18" height="18" aria-hidden="true" />
                         {{ msgs.confirm }}
                     </button>
                 </slot>
@@ -198,8 +198,8 @@ const errorMessage = computed(() => {
     switch (e.code) {
         case 'INVALID_FILE_TYPE': return m.invalidFileType;
         case 'FILE_READ_ERROR': return m.fileReadError;
-        case 'FILE_TOO_LARGE': return (m.fileTooLarge ?? 'File too large. Maximum: {size}.').replace('{size}', e.maxSize ?? '');
-        case 'TOO_MANY_ROWS': return (m.tooManyRows ?? 'Too many rows. Maximum: {max}.').replace('{max}', String(props.maxRows ?? ''));
+        case 'FILE_TOO_LARGE': return m.fileTooLarge.replace('{size}', e.maxSize ?? '');
+        case 'TOO_MANY_ROWS': return m.tooManyRows.replace('{max}', String(props.maxRows ?? ''));
         case 'NO_WORKSHEET': return m.noWorksheet;
         case 'EMPTY_WORKSHEET': return m.emptyWorksheet;
         case 'UNASSIGNED_COLUMNS': return m.unassignedColumns;
@@ -267,11 +267,11 @@ function handleValidate() {
 /* Design tokens — scoped to the component root to avoid global leakage.
    Override by targeting .vsm or any ancestor selector in your app. */
 .vsm {
-    --vsm-primary: #3b82f6;
-    --vsm-primary-hover: #2563eb;
-    --vsm-success-color: #16a34a;
-    --vsm-warning-color: #d97706;
-    --vsm-danger-color: #ef4444;
+    --vsm-primary: #2563eb;
+    --vsm-primary-hover: #1d4ed8;
+    --vsm-success-color: #15803d;
+    --vsm-warning-color: #b45309;
+    --vsm-danger-color: #dc2626;
     --vsm-text-color: #111827;
     --vsm-muted-color: #6b7280;
     --vsm-border-color: #e5e7eb;
@@ -279,7 +279,7 @@ function handleValidate() {
     --vsm-dropzone-bg: #f9fafb;
     --vsm-dropzone-hover-bg: #eff6ff;
     --vsm-input-bg: #fff;
-    --vsm-link-color: #3b82f6;
+    --vsm-link-color: #2563eb;
     --vsm-radius: 8px;
     --vsm-radius-sm: 4px;
 }
@@ -290,7 +290,7 @@ function handleValidate() {
     align-items: center;
     gap: 6px;
     padding: 8px 18px;
-    border-radius: var(--vsm-radius, 8px);
+    border-radius: var(--vsm-radius);
     border: 1px solid transparent;
     font-size: 0.875rem;
     font-weight: 500;
@@ -306,27 +306,27 @@ function handleValidate() {
 }
 
 .vsm-btn--primary {
-    background: var(--vsm-primary, #3b82f6);
+    background: var(--vsm-primary);
     color: #fff;
 }
 
 .vsm-btn--primary:not(:disabled):hover {
-    background: var(--vsm-primary-hover, #2563eb);
+    background: var(--vsm-primary-hover);
 }
 
 .vsm-btn--secondary {
-    background: var(--vsm-card-bg, #fff);
-    border-color: var(--vsm-border-color, #e5e7eb);
-    color: var(--vsm-text-color, #111827);
+    background: var(--vsm-card-bg);
+    border-color: var(--vsm-border-color);
+    color: var(--vsm-text-color);
 }
 
 .vsm-btn--secondary:not(:disabled):hover {
-    background: var(--vsm-dropzone-bg, #f9fafb);
+    background: var(--vsm-dropzone-bg);
 }
 
 .vsm-btn--ghost {
     background: transparent;
-    color: var(--vsm-link-color, #3b82f6);
+    color: var(--vsm-link-color);
     font-size: 0.8125rem;
     padding: 4px 8px;
 }
@@ -372,7 +372,7 @@ function handleValidate() {
     overflow-x: auto;
     padding-bottom: 8px;
     scrollbar-width: thin;
-    scrollbar-color: var(--vsm-border-color, #e5e7eb) transparent;
+    scrollbar-color: var(--vsm-border-color) transparent;
 }
 
 .vsm__footer {
@@ -388,7 +388,7 @@ function handleValidate() {
 }
 
 .vsm__spinner {
-    color: var(--vsm-primary, #3b82f6);
+    color: var(--vsm-primary);
     animation: vsm-spin 1s linear infinite;
 }
 
@@ -403,7 +403,7 @@ function handleValidate() {
     padding: 12px 16px;
     background: #fef2f2;
     border: 1px solid #fecaca;
-    border-radius: var(--vsm-radius, 8px);
+    border-radius: var(--vsm-radius);
     font-size: 0.875rem;
     color: #991b1b;
     position: relative;
