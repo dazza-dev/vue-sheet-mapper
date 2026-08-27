@@ -31,6 +31,8 @@ export type {
     Icons,
     MatcherFn,
     TransformFn,
+    RowIssue,
+    RowValidator,
 } from './types';
 
 export const VueSheetMapperPlugin = {

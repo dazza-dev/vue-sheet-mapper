@@ -43,6 +43,27 @@
                 </slot>
             </div>
 
+            <!-- Problems reported by validateRows -->
+            <div v-if="issues.length" class="vsm__issues">
+                <slot name="issues" :issues="issues" :row="issueRow" :recheck="handleValidate">
+                    <div class="vsm__issues-panel" role="alert">
+                        <strong class="vsm__issues-title">
+                            {{ msgs.issues.title.replace('{n}', String(affectedRows)) }}
+                        </strong>
+                        <ul class="vsm__issues-list">
+                            <li v-for="(issue, i) in shownIssues" :key="i" class="vsm__issue">
+                                <span class="vsm__issue-row">{{ msgs.issues.row.replace('{n}', String(issueRow(issue))) }}</span>
+                                <span v-if="issue.field" class="vsm__issue-field">{{ fieldLabel(issue.field) }}</span>
+                                <span class="vsm__issue-message">{{ issue.message }}</span>
+                            </li>
+                        </ul>
+                        <p v-if="issues.length > shownIssues.length" class="vsm__issues-more">
+                            {{ msgs.issues.more.replace('{n}', String(shownIssues.length)).replace('{total}', String(issues.length)) }}
+                        </p>
+                    </div>
+                </slot>
+            </div>
+
             <!-- Column cards (horizontal scroll) -->
             <div class="vsm__columns" role="list">
                 <ColumnCard
@@ -70,9 +91,14 @@
             <!-- Confirm button -->
             <div class="vsm__footer">
                 <slot name="confirm" :validate="handleValidate" :loading="loading">
-                    <button type="button" class="vsm-btn vsm-btn--primary vsm-btn--lg" :disabled="loading" @click="handleValidate">
+                    <button
+                        type="button"
+                        class="vsm-btn vsm-btn--primary vsm-btn--lg"
+                        :disabled="loading || checkingRows"
+                        @click="handleValidate"
+                    >
                         <component :is="resolvedIcons.confirm" width="18" height="18" aria-hidden="true" />
-                        {{ msgs.confirm }}
+                        {{ checkingRows ? msgs.issues.checking : (issues.length ? msgs.issues.retry : msgs.confirm) }}
                     </button>
                 </slot>
             </div>
@@ -98,7 +124,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { SchemaField, MappedResult, MappingOutput, Locale, MessagesOverride, Icons, MatcherFn, TransformFn } from '../types';
+import type { SchemaField, MappedResult, MappingOutput, Locale, MessagesOverride, Icons, MatcherFn, TransformFn, RowIssue, RowValidator } from '../types';
 import { toRows } from '../utils/toRows';
 import { useSheetMapper } from '../composables/useSheetMapper';
 import { getMessages } from '../i18n';
@@ -131,11 +157,17 @@ const props = withDefaults(
         /** TextDecoder label (e.g. 'shift-jis') forcing the encoding of CSV/text files.
          *  Detected automatically when omitted; ignored for .xlsx and .xls. */
         encoding?: string;
+        /** Checks the mapped rows and reports problems. The library never inspects
+         *  values itself — bring zod, yup, your own function or your backend. */
+        validateRows?: RowValidator;
+        /** How many problems to list at once. Default 50. */
+        maxIssuesShown?: number;
     }>(),
     {
         previewRows: 5,
         locale: 'en',
         output: 'rows',
+        maxIssuesShown: 50,
         // Vue casts an absent Boolean prop to false, so this has to be explicit —
         // otherwise the mapper always starts in "no headers" mode.
         defaultHasHeaders: true,
@@ -147,6 +179,7 @@ const emit = defineEmits<{
     error: [error: import('../types').SheetMapperError];
     'file-picked': [file: File];
     'columns-loaded': [columns: { name: string; assignedKey: string | null }[]];
+    invalid: [issues: RowIssue[]];
     reset: [];
 }>();
 
@@ -177,6 +210,10 @@ const {
     clearColumn,
     toggleHeaders,
     validate,
+    issues,
+    checkingRows,
+    checkRows,
+    issueRow,
     reset,
 } = useSheetMapper(() => props.fields, {
     // Getters, not values: a plain object literal would freeze each prop at its
@@ -189,6 +226,7 @@ const {
     get maxRows() { return props.maxRows; },
     get defaultHasHeaders() { return props.defaultHasHeaders; },
     get encoding() { return props.encoding; },
+    get validateRows() { return props.validateRows; },
 });
 
 const errorMessage = computed(() => {
@@ -209,6 +247,13 @@ const errorMessage = computed(() => {
         default: return e.message;
     }
 });
+
+const shownIssues = computed(() => issues.value.slice(0, props.maxIssuesShown));
+const affectedRows = computed(() => new Set(issues.value.map((i) => i.index)).size);
+
+function fieldLabel(key: string): string {
+    return props.fields.find((f) => f.key === key)?.label ?? key;
+}
 
 const errorList = computed<string[]>(() => {
     if (!error.value) return [];
@@ -237,11 +282,19 @@ async function onFileSelected(f: File) {
     if (props.autoConfirm) handleValidate();
 }
 
-function handleValidate() {
+async function handleValidate() {
     const results = validate();
     if (!results) {
         if (error.value) emit('error', error.value);
         return;
+    }
+
+    if (props.validateRows) {
+        const found = await checkRows();
+        if (found.length) {
+            emit('invalid', found);
+            return;
+        }
     }
 
     if (props.output === 'mapping') {
@@ -282,6 +335,59 @@ function handleValidate() {
     --vsm-link-color: #2563eb;
     --vsm-radius: 8px;
     --vsm-radius-sm: 4px;
+}
+
+.vsm__issues-panel {
+    border: 1px solid var(--vsm-danger-color);
+    border-radius: var(--vsm-radius);
+    background: var(--vsm-card-bg);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vsm__issues-title {
+    color: var(--vsm-danger-color);
+    font-size: 0.9375rem;
+}
+
+.vsm__issues-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.vsm__issue {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    color: var(--vsm-text-color);
+}
+
+.vsm__issue-row {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--vsm-muted-color);
+}
+
+.vsm__issue-field {
+    flex-shrink: 0;
+    font-weight: 600;
+}
+
+.vsm__issues-more {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--vsm-muted-color);
 }
 
 /* Shared button styles */

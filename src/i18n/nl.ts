@@ -20,6 +20,13 @@ const nl: Messages = {
         columnFallback: 'Kolom {n}',
     },
     confirm: 'Bevestigen',
+    issues: {
+        title: '{n} rijen hebben aandacht nodig voor het importeren',
+        row: 'Rij {n}',
+        more: '{n} van {total} problemen getoond',
+        checking: 'Rijen controleren…',
+        retry: 'Opnieuw controleren',
+    },
     loading: 'Laden…',
     errors: {
         title: 'Fout',

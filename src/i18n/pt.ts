@@ -20,6 +20,13 @@ const pt: Messages = {
         columnFallback: 'Coluna {n}',
     },
     confirm: 'Confirmar',
+    issues: {
+        title: '{n} linhas precisam de atenção antes de importar',
+        row: 'Linha {n}',
+        more: 'Mostrando {n} de {total} problemas',
+        checking: 'Verificando linhas…',
+        retry: 'Verificar de novo',
+    },
     loading: 'Carregando…',
     errors: {
         title: 'Erro',

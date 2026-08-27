@@ -20,6 +20,13 @@ const en: Messages = {
         columnFallback: 'Column {n}',
     },
     confirm: 'Confirm',
+    issues: {
+        title: '{n} rows need attention before importing',
+        row: 'Row {n}',
+        more: 'Showing {n} of {total} problems',
+        checking: 'Checking rows…',
+        retry: 'Check again',
+    },
     loading: 'Loading…',
     errors: {
         title: 'Error',

@@ -22,6 +22,7 @@ export function getMessages(locale: Locale, overrides?: MessagesOverride): Messa
         dropzone: { ...base.dropzone, ...defined(overrides.dropzone) },
         columns: { ...base.columns, ...defined(overrides.columns) },
         confirm: overrides.confirm ?? base.confirm,
+        issues: { ...base.issues, ...defined(overrides.issues) },
         loading: overrides.loading ?? base.loading,
         errors: { ...base.errors, ...defined(overrides.errors) },
     };

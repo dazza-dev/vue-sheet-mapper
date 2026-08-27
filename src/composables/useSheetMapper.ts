@@ -1,8 +1,9 @@
 import { ref, shallowRef, computed, watch, toValue } from 'vue';
 import type { Ref, ComputedRef, MaybeRefOrGetter } from 'vue';
-import type { SchemaField, ColumnState, MappedResult, ParsedColumn, SheetMapperError, MatcherFn } from '../types';
+import type { SchemaField, ColumnState, MappedResult, ParsedColumn, SheetMapperError, MatcherFn, RowIssue, RowValidator } from '../types';
 import { parseFile } from '../utils/parseFile';
 import { autoMatch } from '../utils/autoMatch';
+import { toRows } from '../utils/toRows';
 
 export interface UseSheetMapperOptions {
     previewRows?: number;
@@ -20,6 +21,8 @@ export interface UseSheetMapperOptions {
     defaultHasHeaders?: boolean;
     /** TextDecoder label (e.g. 'shift-jis') forcing the encoding of CSV/text files. Detected automatically when omitted; ignored for .xlsx and .xls. */
     encoding?: string;
+    /** Checks the mapped rows and reports problems. Runs after the mapping checks pass. */
+    validateRows?: RowValidator;
 }
 
 export interface UseSheetMapperReturn {
@@ -63,6 +66,14 @@ export interface UseSheetMapperReturn {
     toggleHeaders: () => void;
     /** Validate the mapping. Returns MappedResult[] on success, or sets error and returns null on failure. */
     validate: () => MappedResult[] | null;
+    /** Problems reported by the last checkRows() run. */
+    issues: Ref<RowIssue[]>;
+    /** True while the validateRows option is running. */
+    checkingRows: Ref<boolean>;
+    /** Run the validateRows option over the mapped rows. Returns [] when no validator is configured. */
+    checkRows: () => Promise<RowIssue[]>;
+    /** Spreadsheet row number for an issue, 1-based, accounting for the header row. */
+    issueRow: (issue: RowIssue) => number;
     /** Reset state back to dropzone mode, clearing file and columns. */
     reset: () => void;
 }
@@ -122,6 +133,7 @@ export function useSheetMapper(
     async function loadFile(f: File): Promise<void> {
         loading.value = true;
         error.value = null;
+        issues.value = [];
         columns.value = [];
         file.value = null;
 
@@ -340,10 +352,36 @@ export function useSheetMapper(
             }));
     }
 
+    const issues = ref<RowIssue[]>([]);
+    const checkingRows = ref(false);
+
+    /** Excel counts from 1 and the header occupies a line, so a 0-based array
+     *  position is two rows off when the file has headers. */
+    function issueRow(issue: RowIssue): number {
+        return issue.index + (hasHeaders.value ? 2 : 1);
+    }
+
+    async function checkRows(): Promise<RowIssue[]> {
+        issues.value = [];
+        if (!options.validateRows) return [];
+
+        const results = validate();
+        if (!results) return [];
+
+        checkingRows.value = true;
+        try {
+            issues.value = await options.validateRows(toRows(results));
+        } finally {
+            checkingRows.value = false;
+        }
+        return issues.value;
+    }
+
     function reset(): void {
         file.value = null;
         columns.value = [];
         touched.clear();
+        issues.value = [];
         error.value = null;
         rawParsed = [];
         hasHeaders.value = defaultHasHeaders();
@@ -368,6 +406,10 @@ export function useSheetMapper(
         clearColumn,
         toggleHeaders,
         validate,
+        issues,
+        checkingRows,
+        checkRows,
+        issueRow,
         reset,
     };
 }

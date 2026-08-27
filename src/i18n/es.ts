@@ -20,6 +20,13 @@ const es: Messages = {
         columnFallback: 'Columna {n}',
     },
     confirm: 'Validar Datos',
+    issues: {
+        title: '{n} filas necesitan atención antes de importar',
+        row: 'Fila {n}',
+        more: 'Mostrando {n} de {total} problemas',
+        checking: 'Revisando filas…',
+        retry: 'Revisar de nuevo',
+    },
     loading: 'Cargando…',
     errors: {
         title: 'Error',
