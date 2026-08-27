@@ -5,7 +5,7 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.1.0] — 2026-08-27
 
 ### Added
 
@@ -26,6 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Also adds the `RowIssue` and `RowValidator` types, the `maxIssuesShown` prop,
   an `issues` slot, and `issues` / `checkingRows` / `checkRows` / `issueRow` on
   the composable.
+
+### Documentation
+
+- **The reference moved to a documentation site**, in English and Spanish, with
+  search and a language switcher. The README is the shop window: what the
+  component does, how to install it, one example, and links.
+- The copy leads with what happens rather than with the abstractions —
+  "your users upload a spreadsheet and say which column is which" — across the
+  site, the README and the package description.
 
 ## [3.0.0] — 2026-08-27
 
@@ -194,6 +203,7 @@ The 2.0.0 reactive-schema and headless-helper work started as a contribution fro
 [@partprogramming09](https://github.com/partprogramming09) in
 [#1](https://github.com/dazza-dev/vue-sheet-mapper/pull/1).
 
+[3.1.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v3.1.0
 [3.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v3.0.0
 [2.0.1]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v2.0.1
 [2.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v2.0.0

@@ -1,6 +1,6 @@
 {
   "name": "@dazzadev/vue-sheet-mapper",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Vue 3 component for Excel and CSV imports: users match each column of their file to one of your fields",
   "author": "Andres Daza (https://github.com/dazza-dev)",
   "license": "MIT",
