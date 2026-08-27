@@ -73,7 +73,7 @@ const es = {
 
 export default defineConfig({
     title: 'vue-sheet-mapper',
-    description: 'Map spreadsheet columns to your schema, in Vue 3',
+    description: 'Excel and CSV imports for Vue 3: users match each column of their file to one of your fields',
     base: '/vue-sheet-mapper/docs/',
     cleanUrls: true,
     lastUpdated: true,
@@ -97,7 +97,7 @@ export default defineConfig({
             label: 'Español',
             lang: 'es-ES',
             link: '/es/',
-            description: 'Mapea columnas de una hoja de cálculo a tu esquema, en Vue 3',
+            description: 'Importar Excel y CSV en Vue 3: los usuarios indican a qué campo corresponde cada columna de su archivo',
             themeConfig: {
                 nav: [
                     { text: 'Guía', link: '/es/guide/installation' },
@@ -114,6 +114,10 @@ export default defineConfig({
                 darkModeSwitchLabel: 'Tema',
                 sidebarMenuLabel: 'Menú',
                 langMenuLabel: 'Cambiar idioma',
+                footer: {
+                    message: 'Publicado bajo la licencia MIT.',
+                    copyright: `© ${new Date().getFullYear()} Andres Daza`,
+                },
             },
         },
     },

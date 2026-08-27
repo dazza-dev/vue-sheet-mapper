@@ -6,9 +6,10 @@
 </p>
 
 <p align="center">
-  A Vue 3 component that lets users map columns from an Excel or CSV file to a schema you define.<br>
-  Drop it in, give it your field list, and it handles the file upload, column preview,<br>
-  auto-matching, validation, and structured output.
+  Your users upload a spreadsheet and say which column is which.<br>
+  You get the data in the shape your app expects.<br><br>
+  Give it your field list and it handles the upload, the column preview,<br>
+  the auto-matching, the validation and the output.
 </p>
 
 <p align="center">

@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: vue-sheet-mapper
-  text: Map spreadsheet columns to your schema
-  tagline: A Vue 3 component for the part of an import that users actually struggle with — telling you which column is which.
+  text: Excel and CSV imports for Vue 3
+  tagline: Your users upload a spreadsheet and say which column is which. You get the data in the shape your app expects.
   image:
     src: /logo.svg
     alt: vue-sheet-mapper
@@ -22,14 +22,14 @@ hero:
 features:
   - title: Excel & CSV
     details: Reads .xlsx, .xls and .csv. The text encoding is detected, so UTF-8 without a byte order mark, UTF-16 and Windows-1252 all arrive intact.
-  - title: Auto-matching
-    details: Columns are matched against each field's key, label and aliases, ignoring accents. Replace the algorithm entirely when you need to.
-  - title: Reactive schemas
-    details: Pass a ref, a computed or a getter. A schema fetched from your API can land after the user picked their file, and matching re-runs on its own.
-  - title: Two output modes
-    details: Take the mapped rows as JSON, or take the raw file plus a column dictionary and let your backend do the reading.
-  - title: Bring your own validation
-    details: A single hook hands you every mapped row. zod, yup, a plain function or your backend — the library never inspects a value, it only routes problems back to the right row.
-  - title: Headless
-    details: useSheetMapper carries the whole flow with no markup, so Vuetify, PrimeVue or your own design system stay in charge of the UI.
+  - title: Columns matched for them
+    details: Column names are compared against each field's key, label and aliases, ignoring accents, so most of the mapping is already done when the user arrives.
+  - title: Fields can arrive late
+    details: Pass a ref, a computed or a getter. A field list fetched from your API can land after the user picked their file, and the matching catches up on its own.
+  - title: Rows or the raw file
+    details: Take the mapped rows as JSON, or take the file untouched plus a column dictionary and let your backend read it.
+  - title: Your rules, not ours
+    details: One hook hands you every row. zod, yup, a function of your own or your backend — the library does not inspect values, it puts each problem back on its row.
+  - title: Or no interface at all
+    details: useSheetMapper carries the whole flow without markup, so Vuetify, PrimeVue or your own components draw the screen.
 ---
