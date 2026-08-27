@@ -6,15 +6,120 @@ const { version } = JSON.parse(readFileSync(resolve(__dirname, '../../package.js
 
 const REPO = 'https://github.com/dazza-dev/vue-sheet-mapper';
 
-/** The demo already owns the Pages root and is linked from npm, so the docs
- *  live one level down rather than taking the published URL away from it. */
+/** The demo owns the Pages root and is linked from npm, so the docs live one
+ *  level down rather than taking that published URL away from it.
+ *
+ *  Adding a language means a folder under docs/, an entry here, and nothing
+ *  means a folder under docs/, an entry in `locales`, and nothing else. */
+const versionMenu = {
+    text: `v${version}`,
+    items: [
+        { text: 'Changelog', link: `${REPO}/blob/main/CHANGELOG.md` },
+        { text: 'npm', link: 'https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper' },
+    ],
+};
+
+function sidebar(t: Record<string, string>, prefix = '') {
+    return [
+        {
+            text: t.guide,
+            items: [
+                { text: t.installation, link: `${prefix}/guide/installation` },
+                { text: t.quickStart, link: `${prefix}/guide/quick-start` },
+                { text: t.validation, link: `${prefix}/guide/validation` },
+                { text: t.outputModes, link: `${prefix}/guide/output-modes` },
+                { text: t.automatic, link: `${prefix}/guide/automatic` },
+                { text: t.files, link: `${prefix}/guide/files` },
+                { text: t.headless, link: `${prefix}/guide/headless` },
+                { text: t.global, link: `${prefix}/guide/global` },
+            ],
+        },
+        {
+            text: t.customization,
+            items: [
+                { text: 'i18n', link: `${prefix}/customization/i18n` },
+                { text: t.icons, link: `${prefix}/customization/icons` },
+                { text: t.matcher, link: `${prefix}/customization/matcher` },
+                { text: t.transform, link: `${prefix}/customization/transform` },
+                { text: t.slots, link: `${prefix}/customization/slots` },
+                { text: t.theming, link: `${prefix}/customization/theming` },
+            ],
+        },
+        {
+            text: 'API',
+            items: [
+                { text: t.propsEvents, link: `${prefix}/api/props` },
+                { text: t.types, link: `${prefix}/api/types` },
+                { text: t.exports, link: `${prefix}/api/exports` },
+            ],
+        },
+    ];
+}
+
+const en = {
+    guide: 'Guide', customization: 'Customization',
+    installation: 'Installation', quickStart: 'Quick start', validation: 'Validation',
+    outputModes: 'Output modes', automatic: 'Automatic behavior', files: 'File handling',
+    headless: 'Headless usage', global: 'Global registration',
+    icons: 'Icons', matcher: 'Matcher', transform: 'Transform', slots: 'Slots', theming: 'CSS theming',
+    propsEvents: 'Props & events', types: 'TypeScript types', exports: 'Exported API',
+};
+
+const es = {
+    guide: 'Guía', customization: 'Personalización',
+    installation: 'Instalación', quickStart: 'Primeros pasos', validation: 'Validación',
+    outputModes: 'Modos de salida', automatic: 'Comportamiento automático', files: 'Archivos',
+    headless: 'Uso headless', global: 'Registro global',
+    icons: 'Iconos', matcher: 'Matcher', transform: 'Transform', slots: 'Slots', theming: 'Temas CSS',
+    propsEvents: 'Props y eventos', types: 'Tipos de TypeScript', exports: 'API exportada',
+};
+
 export default defineConfig({
     title: 'vue-sheet-mapper',
     description: 'Map spreadsheet columns to your schema, in Vue 3',
     base: '/vue-sheet-mapper/docs/',
-    lang: 'en-US',
     cleanUrls: true,
     lastUpdated: true,
+
+    locales: {
+        root: {
+            label: 'English',
+            lang: 'en-US',
+            themeConfig: {
+                nav: [
+                    { text: 'Guide', link: '/guide/installation' },
+                    { text: 'API', link: '/api/props' },
+                    { text: 'Demo', link: 'https://dazza-dev.github.io/vue-sheet-mapper/' },
+                    versionMenu,
+                ],
+                sidebar: sidebar(en),
+                editLink: { pattern: `${REPO}/edit/main/docs/:path`, text: 'Edit this page on GitHub' },
+            },
+        },
+        es: {
+            label: 'Español',
+            lang: 'es-ES',
+            link: '/es/',
+            description: 'Mapea columnas de una hoja de cálculo a tu esquema, en Vue 3',
+            themeConfig: {
+                nav: [
+                    { text: 'Guía', link: '/es/guide/installation' },
+                    { text: 'API', link: '/es/api/props' },
+                    { text: 'Demo', link: 'https://dazza-dev.github.io/vue-sheet-mapper/' },
+                    versionMenu,
+                ],
+                sidebar: sidebar(es, '/es'),
+                editLink: { pattern: `${REPO}/edit/main/docs/:path`, text: 'Editar esta página en GitHub' },
+                docFooter: { prev: 'Anterior', next: 'Siguiente' },
+                outline: { label: 'En esta página' },
+                lastUpdatedText: 'Última actualización',
+                returnToTopLabel: 'Volver arriba',
+                darkModeSwitchLabel: 'Tema',
+                sidebarMenuLabel: 'Menú',
+                langMenuLabel: 'Cambiar idioma',
+            },
+        },
+    },
 
     head: [
         ['link', { rel: 'icon', type: 'image/svg+xml', href: '/vue-sheet-mapper/docs/logo.svg' }],
@@ -23,62 +128,31 @@ export default defineConfig({
     themeConfig: {
         logo: '/logo.svg',
 
-        nav: [
-            { text: 'Guide', link: '/guide/installation' },
-            { text: 'API', link: '/api/props' },
-            { text: 'Demo', link: 'https://dazza-dev.github.io/vue-sheet-mapper/' },
-            {
-                text: `v${version}`,
-                items: [
-                    { text: 'Changelog', link: `${REPO}/blob/main/CHANGELOG.md` },
-                    { text: 'npm', link: 'https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper' },
-                ],
-            },
-        ],
-
-        sidebar: [
-            {
-                text: 'Guide',
-                items: [
-                    { text: 'Installation', link: '/guide/installation' },
-                    { text: 'Quick start', link: '/guide/quick-start' },
-                    { text: 'Validation', link: '/guide/validation' },
-                    { text: 'Output modes', link: '/guide/output-modes' },
-                    { text: 'Automatic behavior', link: '/guide/automatic' },
-                    { text: 'File handling', link: '/guide/files' },
-                    { text: 'Headless usage', link: '/guide/headless' },
-                    { text: 'Global registration', link: '/guide/global' },
-                ],
-            },
-            {
-                text: 'Customization',
-                items: [
-                    { text: 'i18n', link: '/customization/i18n' },
-                    { text: 'Icons', link: '/customization/icons' },
-                    { text: 'Matcher', link: '/customization/matcher' },
-                    { text: 'Transform', link: '/customization/transform' },
-                    { text: 'Slots', link: '/customization/slots' },
-                    { text: 'CSS theming', link: '/customization/theming' },
-                ],
-            },
-            {
-                text: 'API',
-                items: [
-                    { text: 'Props & events', link: '/api/props' },
-                    { text: 'TypeScript types', link: '/api/types' },
-                    { text: 'Exported API', link: '/api/exports' },
-                ],
-            },
-        ],
-
         socialLinks: [{ icon: 'github', link: REPO }],
 
-        editLink: {
-            pattern: `${REPO}/edit/main/docs/:path`,
-            text: 'Edit this page on GitHub',
+        search: {
+            provider: 'local',
+            options: {
+                locales: {
+                    es: {
+                        translations: {
+                            button: { buttonText: 'Buscar', buttonAriaLabel: 'Buscar' },
+                            modal: {
+                                displayDetails: 'Ver detalles',
+                                resetButtonTitle: 'Limpiar la búsqueda',
+                                backButtonTitle: 'Volver',
+                                noResultsText: 'Sin resultados para',
+                                footer: {
+                                    selectText: 'para seleccionar',
+                                    navigateText: 'para navegar',
+                                    closeText: 'para cerrar',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         },
-
-        search: { provider: 'local' },
 
         footer: {
             message: 'Released under the MIT License.',

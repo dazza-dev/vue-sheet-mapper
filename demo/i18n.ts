@@ -6,7 +6,7 @@ import type { Locale } from '../src/types';
  * moves the whole page.
  */
 export interface DemoMessages {
-    nav: { theme: string; light: string; dark: string; system: string; language: string; sample: string; sampleHint: string; snippets: string; snippetsHint: string };
+    nav: { theme: string; light: string; dark: string; system: string; language: string; sample: string; sampleHint: string; snippets: string; snippetsHint: string; docs: string };
     side: { title: string; reset: string; schema: string; appearance: string; behavior: string; output: string; file: string };
     schema: { source: string; immediate: string; fromApi: string; immediateHint: string; apiHint: string; loading: string; loaded: string; simulate: string };
     appearance: { icons: string; messages: string; default: string; custom: string; iconsHint: string; messagesHint: string };
@@ -33,7 +33,7 @@ export interface DemoMessages {
 }
 
 const en: DemoMessages = {
-    nav: { theme: 'Color theme', light: 'Light', dark: 'Dark', system: 'System', language: 'Language', sample: 'Download sample', sampleHint: 'Download a 20-row .xlsx to try the mapper', snippets: 'Snippets', snippetsHint: "Show each option's code under the control that turns it on" },
+    nav: { theme: 'Color theme', light: 'Light', dark: 'Dark', system: 'System', language: 'Language', sample: 'Download sample', sampleHint: 'Download a 20-row .xlsx to try the mapper', snippets: 'Snippets', snippetsHint: "Show each option's code under the control that turns it on", docs: 'Docs' },
     side: { title: 'Settings', reset: 'Reset all', schema: 'Schema', appearance: 'Appearance', behavior: 'Behavior', output: 'Output', file: 'File' },
     schema: { source: 'Field source', immediate: 'Immediate', fromApi: 'From an API', immediateHint: 'The schema is available from the first render.', apiHint: 'Fields arrive {ms} ms later, the way a schema fetched from your backend does. Pick the file before they land — auto-matching applies itself the moment they do.', loading: 'Loading schema…', loaded: '{n} fields loaded', simulate: 'Simulate the fetch again' },
     appearance: { icons: 'Icons', messages: 'Messages', default: 'Default', custom: 'Custom', iconsHint: 'Partial override: only the keys you pass are replaced, everything else keeps the default icon.', messagesHint: 'Partial override per locale, merged with the base strings of the active language.' },
@@ -71,7 +71,7 @@ const en: DemoMessages = {
 };
 
 const es: DemoMessages = {
-    nav: { theme: 'Tema de color', light: 'Claro', dark: 'Oscuro', system: 'Sistema', language: 'Idioma', sample: 'Descargar ejemplo', sampleHint: 'Descarga un .xlsx de 20 filas para probar el mapeador', snippets: 'Fragmentos', snippetsHint: 'Muestra el código de cada opción debajo del control que la activa' },
+    nav: { theme: 'Tema de color', light: 'Claro', dark: 'Oscuro', system: 'Sistema', language: 'Idioma', sample: 'Descargar ejemplo', sampleHint: 'Descarga un .xlsx de 20 filas para probar el mapeador', snippets: 'Fragmentos', snippetsHint: 'Muestra el código de cada opción debajo del control que la activa', docs: 'Docs' },
     side: { title: 'Ajustes', reset: 'Restablecer', schema: 'Esquema', appearance: 'Apariencia', behavior: 'Comportamiento', output: 'Salida', file: 'Archivo' },
     schema: { source: 'Origen de los campos', immediate: 'Inmediato', fromApi: 'Desde una API', immediateHint: 'El esquema está disponible desde el primer render.', apiHint: 'Los campos llegan {ms} ms después, como cuando el esquema viene de tu backend. Sube el archivo antes de que lleguen: el auto-match se aplica solo al aterrizar.', loading: 'Cargando esquema…', loaded: '{n} campos cargados', simulate: 'Volver a simular la carga' },
     appearance: { icons: 'Iconos', messages: 'Textos', default: 'Por defecto', custom: 'Personalizados', iconsHint: 'Override parcial: solo se reemplazan las claves que envías, el resto usa el icono por defecto.', messagesHint: 'Override parcial por idioma, fusionado con las cadenas base del idioma activo.' },
@@ -109,7 +109,7 @@ const es: DemoMessages = {
 };
 
 const fr: DemoMessages = {
-    nav: { theme: 'Thème de couleur', light: 'Clair', dark: 'Sombre', system: 'Système', language: 'Langue', sample: 'Télécharger l’exemple', sampleHint: 'Téléchargez un .xlsx de 20 lignes pour essayer', snippets: 'Extraits', snippetsHint: 'Affiche le code de chaque option sous le contrôle qui l’active' },
+    nav: { theme: 'Thème de couleur', light: 'Clair', dark: 'Sombre', system: 'Système', language: 'Langue', sample: 'Télécharger l’exemple', sampleHint: 'Téléchargez un .xlsx de 20 lignes pour essayer', snippets: 'Extraits', snippetsHint: 'Affiche le code de chaque option sous le contrôle qui l’active', docs: 'Docs' },
     side: { title: 'Réglages', reset: 'Réinitialiser', schema: 'Schéma', appearance: 'Apparence', behavior: 'Comportement', output: 'Sortie', file: 'Fichier' },
     schema: { source: 'Source des champs', immediate: 'Immédiate', fromApi: 'Depuis une API', immediateHint: 'Le schéma est disponible dès le premier rendu.', apiHint: 'Les champs arrivent {ms} ms plus tard, comme un schéma récupéré depuis votre backend. Choisissez le fichier avant : l’association automatique s’applique dès leur arrivée.', loading: 'Chargement du schéma…', loaded: '{n} champs chargés', simulate: 'Simuler à nouveau' },
     appearance: { icons: 'Icônes', messages: 'Textes', default: 'Par défaut', custom: 'Personnalisés', iconsHint: 'Remplacement partiel : seules les clés fournies sont remplacées, le reste garde l’icône par défaut.', messagesHint: 'Remplacement partiel par langue, fusionné avec les chaînes de base de la langue active.' },
@@ -147,7 +147,7 @@ const fr: DemoMessages = {
 };
 
 const pt: DemoMessages = {
-    nav: { theme: 'Tema de cor', light: 'Claro', dark: 'Escuro', system: 'Sistema', language: 'Idioma', sample: 'Baixar exemplo', sampleHint: 'Baixe um .xlsx de 20 linhas para testar', snippets: 'Trechos', snippetsHint: 'Mostra o código de cada opção abaixo do controle que a ativa' },
+    nav: { theme: 'Tema de cor', light: 'Claro', dark: 'Escuro', system: 'Sistema', language: 'Idioma', sample: 'Baixar exemplo', sampleHint: 'Baixe um .xlsx de 20 linhas para testar', snippets: 'Trechos', snippetsHint: 'Mostra o código de cada opção abaixo do controle que a ativa', docs: 'Docs' },
     side: { title: 'Configurações', reset: 'Redefinir', schema: 'Esquema', appearance: 'Aparência', behavior: 'Comportamento', output: 'Saída', file: 'Arquivo' },
     schema: { source: 'Origem dos campos', immediate: 'Imediata', fromApi: 'De uma API', immediateHint: 'O esquema está disponível desde a primeira renderização.', apiHint: 'Os campos chegam {ms} ms depois, como um esquema vindo do seu backend. Escolha o arquivo antes: o auto-match se aplica assim que eles chegam.', loading: 'Carregando esquema…', loaded: '{n} campos carregados', simulate: 'Simular o carregamento de novo' },
     appearance: { icons: 'Ícones', messages: 'Textos', default: 'Padrão', custom: 'Personalizados', iconsHint: 'Substituição parcial: só as chaves enviadas são trocadas, o resto mantém o ícone padrão.', messagesHint: 'Substituição parcial por idioma, mesclada com as cadeias base do idioma ativo.' },
@@ -185,7 +185,7 @@ const pt: DemoMessages = {
 };
 
 const nl: DemoMessages = {
-    nav: { theme: 'Kleurthema', light: 'Licht', dark: 'Donker', system: 'Systeem', language: 'Taal', sample: 'Voorbeeld downloaden', sampleHint: 'Download een .xlsx met 20 rijen om te proberen', snippets: 'Fragmenten', snippetsHint: 'Toont de code van elke optie onder de knop die deze inschakelt' },
+    nav: { theme: 'Kleurthema', light: 'Licht', dark: 'Donker', system: 'Systeem', language: 'Taal', sample: 'Voorbeeld downloaden', sampleHint: 'Download een .xlsx met 20 rijen om te proberen', snippets: 'Fragmenten', snippetsHint: 'Toont de code van elke optie onder de knop die deze inschakelt', docs: 'Docs' },
     side: { title: 'Instellingen', reset: 'Alles herstellen', schema: 'Schema', appearance: 'Weergave', behavior: 'Gedrag', output: 'Uitvoer', file: 'Bestand' },
     schema: { source: 'Bron van de velden', immediate: 'Direct', fromApi: 'Via een API', immediateHint: 'Het schema is beschikbaar vanaf de eerste render.', apiHint: 'De velden komen {ms} ms later binnen, zoals een schema dat je backend levert. Kies het bestand alvast: de automatische koppeling wordt toegepast zodra ze binnen zijn.', loading: 'Schema laden…', loaded: '{n} velden geladen', simulate: 'Opnieuw simuleren' },
     appearance: { icons: 'Pictogrammen', messages: 'Teksten', default: 'Standaard', custom: 'Aangepast', iconsHint: 'Gedeeltelijke overschrijving: alleen de sleutels die je meegeeft worden vervangen, de rest houdt het standaardpictogram.', messagesHint: 'Gedeeltelijke overschrijving per taal, samengevoegd met de basisteksten van de actieve taal.' },

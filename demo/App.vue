@@ -62,33 +62,17 @@
                     </ul>
                 </div>
 
-                <a class="topbar__action" :href="asset('sample-contacts.xlsx')" download
-                   :title="t.nav.sampleHint">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                    </svg>
-                    <span>{{ t.nav.sample }}</span>
-                </a>
-
-                <button
-                    type="button"
-                    class="topbar__action"
-                    :class="{ 'topbar__action--on': showSnippets }"
-                    :aria-pressed="showSnippets"
-                    :title="t.nav.snippetsHint"
-                    @click="showSnippets = !showSnippets"
-                >
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
-                    </svg>
-                    <span>{{ t.nav.snippets }}</span>
-                </button>
-
                 <span class="topbar__sep" aria-hidden="true"></span>
 
                 <span class="topbar__version">v{{ version }}</span>
+                <a class="topbar__link" href="https://dazza-dev.github.io/vue-sheet-mapper/docs/"
+                   target="_blank" rel="noopener" :title="t.nav.docs">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                    <span>{{ t.nav.docs }}</span>
+                </a>
                 <a class="topbar__link topbar__link--npm" href="https://www.npmjs.com/package/@dazzadev/vue-sheet-mapper"
                    target="_blank" rel="noopener" title="npm">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
@@ -399,6 +383,29 @@
                         <span v-if="item.id === 'output' && outputCount" class="tabs__count">{{ outputCount }}</span>
                     </button>
                     <div class="tabs__spacer" />
+                    <a class="tool" :href="asset('sample-contacts.xlsx')" download
+                       :title="t.nav.sampleHint">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                        </svg>
+                        <span>{{ t.nav.sample }}</span>
+                    </a>
+
+                    <button
+                        type="button"
+                        class="tool"
+                        :class="{ 'tool--on': showSnippets }"
+                        :aria-pressed="showSnippets"
+                        :title="t.nav.snippetsHint"
+                        @click="showSnippets = !showSnippets"
+                    >
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                        </svg>
+                        <span>{{ t.nav.snippets }}</span>
+                    </button>
                     <button class="btn-ghost" type="button" @click="remountMapper">{{ t.tabs.restart }}</button>
                 </nav>
 
@@ -1518,6 +1525,32 @@ body {
 }
 
 .tabs .btn-ghost { align-self: center; }
+
+.tool {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--d-text-dim);
+    background: var(--d-surface);
+    border: 1px solid var(--d-line);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tool:hover { background: var(--d-hover); color: var(--d-text); }
+
+.tool--on {
+    background: var(--d-accent-soft);
+    border-color: var(--d-accent);
+    color: var(--d-accent);
+}
 
 /* ─── Canvas ──────────────────────────────────────────────────────────── */
 
