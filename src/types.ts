@@ -6,8 +6,14 @@ export interface SchemaField {
     key: string;
     /** Human-readable label shown in the column selector (e.g. "Cédula"). */
     label: string;
-    /** If true, validate() will fail if no column is mapped to this field. */
-    required?: boolean;
+    /**
+     * If true, validate() fails unless some column is mapped to this field.
+     *
+     * This is a check on the mapping, not on the data: it does not require every
+     * row to carry a value, and an empty cell passes. Row contents are emitted
+     * as-is.
+     */
+    requireColumn?: boolean;
     /** Extra names used for auto-matching (case-insensitive, trimmed). */
     aliases?: string[];
 }
@@ -81,7 +87,7 @@ export type SheetMapperErrorCode =
 export interface SheetMapperError {
     code: SheetMapperErrorCode;
     message: string;
-    /** Field keys that are required but unmapped (only for MISSING_REQUIRED_FIELDS). */
+    /** Field keys with requireColumn that no column is mapped to (only for MISSING_REQUIRED_FIELDS). */
     missingFields?: string[];
     /** Column names that have no assignment (only for UNASSIGNED_COLUMNS). */
     unassignedColumns?: string[];

@@ -14,8 +14,8 @@ const parsedColumns: ParsedColumn[] = [
 ];
 
 const lateFields: SchemaField[] = [
-    { key: 'name', label: 'Name', required: true },
-    { key: 'email', label: 'Email', required: true },
+    { key: 'name', label: 'Name', requireColumn: true },
+    { key: 'email', label: 'Email', requireColumn: true },
 ];
 
 function columnStates(wrapper: ReturnType<typeof mount>) {

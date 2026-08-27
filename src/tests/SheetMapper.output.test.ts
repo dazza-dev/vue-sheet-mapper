@@ -9,8 +9,8 @@ import { parseFile } from '../utils/parseFile';
 const mockParseFile = vi.mocked(parseFile);
 
 const fields: SchemaField[] = [
-    { key: 'name', label: 'Name', required: true },
-    { key: 'email', label: 'Email', required: true },
+    { key: 'name', label: 'Name', requireColumn: true },
+    { key: 'email', label: 'Email', requireColumn: true },
 ];
 
 // index 1 is missing on purpose: an entirely empty column that parseFile dropped.
@@ -70,7 +70,7 @@ describe('SheetMapper — output prop', () => {
 
     it("emits an error instead of a payload when the mapping is incomplete, even with output 'mapping'", async () => {
         const wrapper = mount(SheetMapper, {
-            props: { fields: [...fields, { key: 'phone', label: 'Phone', required: true }], output: 'mapping' },
+            props: { fields: [...fields, { key: 'phone', label: 'Phone', requireColumn: true }], output: 'mapping' },
         });
         await loadFile(wrapper);
 

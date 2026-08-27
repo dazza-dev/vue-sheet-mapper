@@ -39,7 +39,7 @@ export interface UseSheetMapperReturn {
     takenKeys: ComputedRef<Set<string>>;
     /** Columns that have not yet been assigned to a schema field or marked as ignored. */
     unassignedColumns: ComputedRef<ColumnState[]>;
-    /** Schema fields marked as required: true that have not yet been assigned to any column. */
+    /** Fields with requireColumn: true that no column is mapped to yet. */
     missingRequiredFields: ComputedRef<SchemaField[]>;
     /** True if all columns are assigned or ignored, and all required fields are mapped. */
     isValid: ComputedRef<boolean>;
@@ -270,7 +270,7 @@ export function useSheetMapper(
     const unassignedColumns = computed(() => columns.value.filter((c) => c.assignedKey === null));
 
     const missingRequiredFields = computed(() =>
-        toValue(fields).filter((f) => f.required && !takenKeys.value.has(f.key))
+        toValue(fields).filter((f) => f.requireColumn && !takenKeys.value.has(f.key))
     );
 
     const isValid = computed(

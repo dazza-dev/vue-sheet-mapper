@@ -54,7 +54,7 @@
                         :key="f.key"
                         :value="f.key"
                     >
-                        {{ f.label }}{{ f.required ? ' *' : '' }}
+                        {{ f.label }}{{ f.requireColumn ? ' *' : '' }}
                     </option>
                     <option value="ignore">{{ messages.columns.ignoreOption }}</option>
                 </select>

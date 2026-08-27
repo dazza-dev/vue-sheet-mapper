@@ -608,9 +608,9 @@ const mappingResult = ref<MappingOutput | null>(null);
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
 const contactFields: SchemaField[] = [
-    { key: 'document_number', label: 'ID',         required: true, aliases: ['id', 'document', 'cedula', 'documento'] },
-    { key: 'first_name',      label: 'First Name', required: true, aliases: ['first name', 'nombre', 'nombres'] },
-    { key: 'last_name',       label: 'Last Name',  required: true, aliases: ['last name', 'apellido', 'apellidos'] },
+    { key: 'document_number', label: 'ID',         requireColumn: true, aliases: ['id', 'document', 'cedula', 'documento'] },
+    { key: 'first_name',      label: 'First Name', requireColumn: true, aliases: ['first name', 'nombre', 'nombres'] },
+    { key: 'last_name',       label: 'Last Name',  requireColumn: true, aliases: ['last name', 'apellido', 'apellidos'] },
     { key: 'email',           label: 'Email',                      aliases: ['email', 'mail', 'correo'] },
     { key: 'cellphone',       label: 'Phone',                      aliases: ['phone', 'cellphone', 'telefono', 'celular'] },
     { key: 'gender',          label: 'Gender',                     aliases: ['gender', 'genero', 'sexo'] },
@@ -830,8 +830,8 @@ onMounted(async () => {
         : `import type { SchemaField } from '@dazzadev/vue-sheet-mapper';
 
 const fields: SchemaField[] = [
-    { key: 'document_number', label: 'ID',         required: true, aliases: ['id', 'documento'] },
-    { key: 'first_name',      label: 'First Name', required: true, aliases: ['nombre', 'nombres'] },
+    { key: 'document_number', label: 'ID',         requireColumn: true, aliases: ['id', 'documento'] },
+    { key: 'first_name',      label: 'First Name', requireColumn: true, aliases: ['nombre', 'nombres'] },
     { key: 'email',           label: 'Email',                      aliases: ['mail', 'correo'] },
     // …
 ];`,
@@ -1220,9 +1220,12 @@ body {
     --vsm-dropzone-bg: #14161c;
     --vsm-dropzone-hover-bg: #1b2030;
     --vsm-input-bg: #1b1e25;
-    --vsm-primary: #3b82f6;
-    --vsm-primary-hover: #60a5fa;
+    --vsm-primary: #2563eb;
+    --vsm-primary-hover: #1d4ed8;
     --vsm-link-color: #60a5fa;
+    --vsm-success-color: #4ade80;
+    --vsm-danger-color: #f87171;
+    --vsm-warning-color: #fbbf24;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1234,9 +1237,12 @@ body {
         --vsm-dropzone-bg: #14161c;
         --vsm-dropzone-hover-bg: #1b2030;
         --vsm-input-bg: #1b1e25;
-        --vsm-primary: #3b82f6;
-        --vsm-primary-hover: #60a5fa;
+        --vsm-primary: #2563eb;
+        --vsm-primary-hover: #1d4ed8;
         --vsm-link-color: #60a5fa;
+        --vsm-success-color: #4ade80;
+        --vsm-danger-color: #f87171;
+        --vsm-warning-color: #fbbf24;
     }
 }
 

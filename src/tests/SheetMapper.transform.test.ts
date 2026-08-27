@@ -9,8 +9,8 @@ import { parseFile } from '../utils/parseFile';
 const mockParseFile = vi.mocked(parseFile);
 
 const fields: SchemaField[] = [
-    { key: 'name',  label: 'Name',  required: true },
-    { key: 'email', label: 'Email', required: true },
+    { key: 'name',  label: 'Name',  requireColumn: true },
+    { key: 'email', label: 'Email', requireColumn: true },
 ];
 
 const parsedColumns: ParsedColumn[] = [

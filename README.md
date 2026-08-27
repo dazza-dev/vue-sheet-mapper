@@ -33,7 +33,7 @@
 - **Auto-match** — maps columns to fields by key, label or aliases (accent-insensitive)
 - **Reactive schemas** — pass a `ref`, `computed` or getter; fields can arrive from your API after the file is picked
 - **Preview** — shows the first N data rows per column while the user maps
-- **Validation** — enforces required fields and ensures every column is assigned or ignored
+- **Validation** — every column is assigned or ignored, every `requireColumn` field is mapped, no field is mapped twice
 - **Two output modes** — the mapped rows, or the raw file plus a mapping dictionary for server-side imports
 - **i18n** — 5 built-in locales (en, es, fr, pt, nl) with per-key overrides
 - **Customizable icons** — replace any icon with your own Vue component
@@ -119,13 +119,13 @@ const fields: SchemaField[] = [
   {
     key: "first_name",
     label: "First name",
-    required: true,
+    requireColumn: true,
     aliases: ["nombre", "name"],
   },
   {
     key: "last_name",
     label: "Last name",
-    required: true,
+    requireColumn: true,
     aliases: ["apellido"],
   },
   { key: "email", label: "Email", aliases: ["correo", "mail"] },
@@ -275,7 +275,7 @@ Defines one field in your target schema.
 interface SchemaField {
   key: string; // used in MappedResult.field and as the transform row key
   label: string; // shown in the dropdown and column card
-  required?: boolean; // validate() fails if this field has no column assigned
+  requireColumn?: boolean; // validate() fails if no column is mapped to this field
   aliases?: string[]; // extra names for auto-matching (e.g. column headers in other languages)
 }
 ```
@@ -648,6 +648,46 @@ function onMapped(results: MappedResult[]) {
 
 ---
 
+## Validation
+
+`validate()` runs before `@mapped` fires and checks three things:
+
+- every column is assigned to a field or marked as ignored,
+- every field marked `requireColumn: true` has a column mapped to it,
+- no field is mapped to more than one column.
+
+### What `required` means
+
+`requireColumn: true` is a check on the **mapping**, not on the **data**. It asks
+"did the user point some column at this field?" — not "does every row carry a
+value?".
+
+A file whose `Email` column exists but is blank on rows 4 and 7 passes
+validation, and those two rows reach `@mapped` with `email: ""`. The same goes
+for a malformed address, a date that does not exist, or `"N/A"` in a numeric
+column: cell values are emitted exactly as they were read, as strings.
+
+That boundary is deliberate — mapping columns and validating records are
+different jobs, and the second one belongs to whatever you already use for it.
+But it is worth being explicit about, because the word `required` invites the
+other reading. If your import must reject bad rows, validate the output of
+`@mapped` before you write it:
+
+```typescript
+function onMapped(results: MappedResult[]) {
+  const rows = toRows(results);
+
+  const problems = rows.flatMap((row, i) =>
+    !row.email?.includes("@") ? [{ row: i + 1, message: "Invalid email" }] : [],
+  );
+
+  if (problems.length) return showProblems(problems);
+  save(rows);
+}
+```
+
+---
+
 ## Output modes
 
 `output` decides what `@mapped` hands you.
@@ -666,8 +706,8 @@ import { SheetMapper } from "@dazzadev/vue-sheet-mapper";
 import type { MappingOutput, SchemaField } from "@dazzadev/vue-sheet-mapper";
 
 const fields: SchemaField[] = [
-  { key: "name", label: "Name", required: true },
-  { key: "email", label: "Email", required: true },
+  { key: "name", label: "Name", requireColumn: true },
+  { key: "email", label: "Email", requireColumn: true },
 ];
 
 async function onMapped(payload: MappingOutput) {
@@ -863,8 +903,8 @@ import type { SchemaField } from "@dazzadev/vue-sheet-mapper";
 
 // Static or reactive (e.g. ref, computed, or from an API)
 const fields = ref<SchemaField[]>([
-  { key: "name", label: "Name", required: true },
-  { key: "email", label: "Email", required: true, aliases: ["mail", "correo"] },
+  { key: "name", label: "Name", requireColumn: true },
+  { key: "email", label: "Email", requireColumn: true, aliases: ["mail", "correo"] },
   { key: "phone", label: "Phone" },
 ]);
 
@@ -878,7 +918,7 @@ const {
   takenKeys,              // ComputedRef<Set<string>>
   unassignedColumns,      // ComputedRef<ColumnState[]>
   missingRequiredFields,  // ComputedRef<SchemaField[]>
-  isValid,                // ComputedRef<boolean> (true when all columns mapped/ignored and required fields satisfied)
+  isValid,                // ComputedRef<boolean> (all columns assigned or ignored, and every required field mapped)
   mapping,                // ComputedRef<Record<number, string>> (spreadsheet column index -> fieldKey)
   loadFile,               // (file: File) => Promise<void>
   assignField,            // (columnIndex: number, fieldKey: string | null) => void — columnIndex is the position in `columns`

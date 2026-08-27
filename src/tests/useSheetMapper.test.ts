@@ -14,8 +14,8 @@ const mockParseFile = vi.mocked(parseFile);
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fields: SchemaField[] = [
-    { key: 'name',  label: 'Name',  required: true },
-    { key: 'email', label: 'Email', required: true },
+    { key: 'name',  label: 'Name',  requireColumn: true },
+    { key: 'email', label: 'Email', requireColumn: true },
     { key: 'phone', label: 'Phone' },
 ];
 
@@ -322,8 +322,8 @@ describe('useSheetMapper — reactive schemas & computed helpers', () => {
 
     it('works with a ref of SchemaField[]', async () => {
         const reactiveFields = ref([
-            { key: 'name', label: 'Name', required: true },
-            { key: 'email', label: 'Email', required: true },
+            { key: 'name', label: 'Name', requireColumn: true },
+            { key: 'email', label: 'Email', requireColumn: true },
         ]);
         const mapper = useSheetMapper(reactiveFields);
         await loadWithColumns(mapper);
@@ -356,8 +356,8 @@ describe('useSheetMapper — reactive schemas & computed helpers', () => {
 
         // Asynchronous resolution of fields
         reactiveFields.value = [
-            { key: 'name', label: 'Name', required: true },
-            { key: 'email', label: 'Email', required: true },
+            { key: 'name', label: 'Name', requireColumn: true },
+            { key: 'email', label: 'Email', requireColumn: true },
             { key: 'phone', label: 'Phone' },
         ];
         await nextTick();
@@ -378,7 +378,7 @@ describe('useSheetMapper — reactive schemas & computed helpers', () => {
     });
 
     it('sets all unassigned columns to ignore with ignoreUnassignedColumns', async () => {
-        const partialFields: SchemaField[] = [{ key: 'name', label: 'Name', required: true }];
+        const partialFields: SchemaField[] = [{ key: 'name', label: 'Name', requireColumn: true }];
         const mapper = useSheetMapper(partialFields);
         await loadWithColumns(mapper);
 
@@ -489,8 +489,8 @@ describe('useSheetMapper — reactive schemas & computed helpers', () => {
 
     it('computes missingRequiredFields correctly', async () => {
         const strictFields: SchemaField[] = [
-            { key: 'name', label: 'Name', required: true },
-            { key: 'code', label: 'Employee Code', required: true },
+            { key: 'name', label: 'Name', requireColumn: true },
+            { key: 'code', label: 'Employee Code', requireColumn: true },
         ];
         const mapper = useSheetMapper(strictFields);
         await loadWithColumns(mapper);

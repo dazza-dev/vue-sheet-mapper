@@ -8,8 +8,8 @@ import type { ColumnState, SchemaField } from '../types';
 const messages = getMessages('en');
 
 const fields: SchemaField[] = [
-    { key: 'name',  label: 'Full Name', required: true },
-    { key: 'email', label: 'Email',     required: true },
+    { key: 'name',  label: 'Full Name', requireColumn: true },
+    { key: 'email', label: 'Email',     requireColumn: true },
     { key: 'phone', label: 'Phone' },
 ];
 
