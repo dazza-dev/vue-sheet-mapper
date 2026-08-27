@@ -6,20 +6,15 @@
 - que cada campo marcado con `requireColumn: true` tenga una columna asignada,
 - que ningún campo esté asignado a más de una columna.
 
-## Por qué `requireColumn` y no `required`
+## Qué comprueba `requireColumn`
 
-`requireColumn: true` comprueba el **mapeo**, no los **datos**. Pregunta "¿el
-usuario apuntó alguna columna a este campo?", no "¿cada fila trae un valor?".
+`requireColumn: true` comprueba el **mapeo**, no los **datos**. Pregunta si el
+usuario apuntó alguna columna a este campo, no si cada fila trae un valor.
 
 Un archivo cuya columna `Correo` existe pero está en blanco en las filas 4 y 7
 pasa esta comprobación, y esas dos filas llegan a `@mapped` con `email: ""`. Lo
 mismo con una dirección malformada, una fecha que no existe o un `"N/A"` en una
 columna numérica.
-
-Todas las librerías de esquemas —zod, yup, JSON Schema— llaman `required` a la
-pregunta de nivel fila, así que llamar `required` a esta prometía una
-comprobación que la librería no hace. El nombre queda libre para una futura
-validación por fila, y el flag dice lo que hace.
 
 Para comprobar los valores en sí, usa [`validateRows`](#validar-los-datos).
 
@@ -27,7 +22,7 @@ Para comprobar los valores en sí, usa [`validateRows`](#validar-los-datos).
 
 `validate()` comprueba el mapeo. Para comprobar los valores, pasa `validateRows`.
 
-La librería nunca inspecciona un valor, y nunca lo hará: las reglas son tuyas.
+La librería no inspecciona los valores: las reglas son tuyas.
 Trae [zod](https://zod.dev), yup, una función normal o tu propio backend — la
 librería solo devuelve cada problema que reportes a la fila que le corresponde.
 

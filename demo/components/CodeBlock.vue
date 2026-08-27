@@ -47,8 +47,7 @@ const highlighted = computed(() => hljs.highlight(props.code, { language: props.
     overflow-wrap: break-word;
 }
 
-/* Token colours, tuned to the demo palette rather than imported from a
-   highlight.js theme, so both themes stay coherent. */
+/* Token colours, matched to the demo palette. */
 .hljs { color: #cdd6f4; }
 .hljs-comment, .hljs-quote { color: #6b7280; font-style: italic; }
 .hljs-keyword, .hljs-literal, .hljs-type { color: #c792ea; }

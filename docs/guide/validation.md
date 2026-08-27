@@ -6,20 +6,15 @@
 - every field marked `requireColumn: true` has a column mapped to it,
 - no field is mapped to more than one column.
 
-## Why `requireColumn`, not `required`
+## What `requireColumn` checks
 
-`requireColumn: true` is a check on the **mapping**, not on the **data**. It
-asks "did the user point some column at this field?" — not "does every row
-carry a value?".
+`requireColumn: true` is a check on the **mapping**, not on the **data**. It asks
+whether the user pointed some column at this field — not whether every row
+carries a value.
 
 A file whose `Email` column exists but is blank on rows 4 and 7 passes this
 check, and those two rows reach `@mapped` with `email: ""`. The same goes for a
 malformed address, a date that does not exist, or `"N/A"` in a numeric column.
-
-Every schema library — zod, yup, JSON Schema — spells the row-level question
-`required`, so naming this one `required` promised a check the library does not
-perform. The name is left free for row-level validation, and the flag says what
-it does.
 
 To check the values themselves, use [`validateRows`](#validating-the-data).
 
@@ -27,7 +22,7 @@ To check the values themselves, use [`validateRows`](#validating-the-data).
 
 `validate()` checks the mapping. To check the values, pass `validateRows`.
 
-The library never inspects a value itself, and never will: rules are yours.
+The library does not inspect values: the rules are yours.
 Bring [zod](https://zod.dev), yup, a plain function or your own backend — the
 library only routes what you report back to the right row.
 

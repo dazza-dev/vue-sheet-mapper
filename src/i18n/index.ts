@@ -7,8 +7,7 @@ import nl from './nl';
 
 const locales: Record<Locale, Messages> = { en, es, fr, pt, nl };
 
-/** Drops keys whose value is undefined, so an explicit undefined in an override
- *  cannot blank out the base string when spread over it. */
+/** Drops undefined values so spreading an override keeps the base string. */
 function defined<T extends object>(over?: T): Partial<T> {
     return Object.fromEntries(
         Object.entries(over ?? {}).filter(([, value]) => value !== undefined),

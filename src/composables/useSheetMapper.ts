@@ -44,7 +44,7 @@ export interface UseSheetMapperReturn {
     unassignedColumns: ComputedRef<ColumnState[]>;
     /** Fields with requireColumn: true that no column is mapped to yet. */
     missingRequiredFields: ComputedRef<SchemaField[]>;
-    /** True if all columns are assigned or ignored, and all required fields are mapped. */
+    /** True when every column is assigned or ignored and every requireColumn field is mapped. */
     isValid: ComputedRef<boolean>;
     /** Mapping dictionary mapping spreadsheet column index (`ColumnState.index`) to field key
      *  (omitting ignored and unassigned columns). Not the position in the `columns` array. */
@@ -95,17 +95,14 @@ export function useSheetMapper(
     fields: MaybeRefOrGetter<SchemaField[]>,
     options: UseSheetMapperOptions = {}
 ): UseSheetMapperReturn {
-    // Read through to `options` on every use instead of capturing: these arrive
-    // as component props, and a prop that silently keeps its mount-time value is
-    // a bug the consumer cannot see.
+    // Read on every use: these arrive as props and may change after mount.
     const previewRows = () => options.previewRows ?? 5;
     const columnLabel = (i: number) => (options.columnLabel ?? ((n: number) => `Column ${n + 1}`))(i);
     const matchFn = (): MatcherFn => options.matcher ?? autoMatch;
 
     const loading = ref(false);
     const error = ref<SheetMapperError | null>(null);
-    // shallowRef: a File is an opaque handle. Deep reactivity would hand consumers
-    // a Proxy instead of the File itself, which FormData and fetch reject.
+    // shallowRef: FormData and fetch require the File itself, not a reactive proxy.
     const file = shallowRef<File | null>(null);
     const defaultHasHeaders = () => options.defaultHasHeaders ?? true;
     const hasHeaders = ref(defaultHasHeaders());
@@ -311,9 +308,7 @@ export function useSheetMapper(
             return null;
         }
 
-        // No field may be claimed by two columns. assignField prevents it, but a
-        // custom `matcher` can return a Map that does — and toRows would then
-        // silently drop one of the columns.
+        // Reachable through a custom matcher, which assignField cannot police.
         const seen = new Set<string>();
         const duplicates = new Set<string>();
         columns.value.forEach((c) => {
@@ -330,7 +325,7 @@ export function useSheetMapper(
             return null;
         }
 
-        // All required fields must be mapped
+        // Every requireColumn field needs a column
         const missing = missingRequiredFields.value.map((f) => f.key);
         if (missing.length > 0) {
             error.value = {
@@ -355,8 +350,7 @@ export function useSheetMapper(
     const issues = ref<RowIssue[]>([]);
     const checkingRows = ref(false);
 
-    /** Excel counts from 1 and the header occupies a line, so a 0-based array
-     *  position is two rows off when the file has headers. */
+    /** Spreadsheet row for an issue: 1-based, plus the header line when present. */
     function issueRow(issue: RowIssue): number {
         return issue.index + (hasHeaders.value ? 2 : 1);
     }

@@ -76,9 +76,7 @@ export interface MappingOutput {
 export interface RowIssue {
     /**
      * Position in the `rows` array the validator received, 0-based.
-     *
-     * Not the spreadsheet row: the component resolves that for display, since
-     * it is the only place that knows whether row 1 is a header.
+     * The component resolves it to the spreadsheet row for display.
      */
     index: number;
     /** Schema field key the problem belongs to. Used to name the column. */
@@ -90,12 +88,8 @@ export interface RowIssue {
 /**
  * Checks the mapped data and returns the problems found.
  *
- * Receives every row at once so cross-row rules (duplicate ids) and batched
- * remote checks are possible; per-row validation is a `flatMap` away. Return an
- * empty array when the data is fine.
- *
- * The library never inspects values itself — bring zod, yup, your own function
- * or your backend. It only routes what you report back to the right row.
+ * Receives every row at once, so cross-row rules and batched remote checks are
+ * possible. Return an empty array when the data is fine.
  */
 export type RowValidator = (
     rows: Record<string, string>[],

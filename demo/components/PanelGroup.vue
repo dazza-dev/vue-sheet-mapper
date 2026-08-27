@@ -40,7 +40,7 @@ const open = ref(props.defaultOpen);
     align-items: center;
     gap: 8px;
     padding: 11px 16px;
-    /* Its own band, so the groups read as sections instead of one long list. */
+    /* Its own band, to separate the groups. */
     background: var(--d-group-head, transparent);
     border: 0;
     border-top: 1px solid var(--d-line);

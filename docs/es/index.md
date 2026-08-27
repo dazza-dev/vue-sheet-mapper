@@ -21,7 +21,7 @@ hero:
 
 features:
   - title: Excel y CSV
-    details: "Lee .xlsx, .xls y .csv, detectando la codificación, así que un archivo UTF-8 sin BOM deja de llegar con los acentos rotos."
+    details: "Lee .xlsx, .xls y .csv detectando la codificación del texto, así que UTF-8 sin BOM, UTF-16 y Windows-1252 llegan intactos."
   - title: Auto-match
     details: "Compara el nombre de cada columna contra la clave, la etiqueta y los alias de cada campo, ignorando acentos. Puedes reemplazar el algoritmo entero."
   - title: Esquemas reactivos

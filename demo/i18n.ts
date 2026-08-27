@@ -1,10 +1,6 @@
 import type { Locale } from '../src/types';
 
-/**
- * Strings for the demo shell itself. The library ships its own translations for
- * the component; these cover the playground around it, so one language switch
- * moves the whole page.
- */
+/** Strings for the demo shell. The component ships its own translations. */
 export interface DemoMessages {
     nav: { theme: string; light: string; dark: string; system: string; language: string; sample: string; sampleHint: string; snippets: string; snippetsHint: string; docs: string };
     side: { title: string; reset: string; schema: string; appearance: string; behavior: string; output: string; file: string };

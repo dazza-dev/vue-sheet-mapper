@@ -34,8 +34,7 @@ export default defineConfig({
         },
         outDir: resolve(__dirname, 'dist'),
         emptyOutDir: true,
-        // `root` is demo/, so publicDir resolves to demo/public. The dev server
-        // should serve it; the published package must not ship it.
+        // publicDir resolves to demo/public: serve it, do not publish it.
         copyPublicDir: false,
     },
 });

@@ -410,7 +410,7 @@
                 </nav>
 
                 <div class="canvas">
-                    <!-- Preview: no max-width, the column cards want every pixel -->
+                    <!-- Preview -->
                     <div v-show="tab === 'preview'" class="canvas__inner canvas__inner--wide">
                         <div class="stage">
                             <SheetMapper
@@ -526,8 +526,7 @@
             </main>
         </div>
 
-        <!-- The component renders its own error inline. This is the developer-facing
-             view of the @error event, so it is styled as a log line, not a second alert. -->
+        <!-- The @error payload, as a log line. The component shows its own banner. -->
         <transition name="toast">
             <div v-if="lastError" class="toast">
                 <code class="toast__event">@error</code>
@@ -649,8 +648,7 @@ const contactFields: SchemaField[] = [
     { key: 'notes',           label: 'Notes',                      aliases: ['notes', 'comments', 'notas'] },
 ];
 
-// Reactive schema: `fields` is a ref, so the mapper re-runs auto-matching
-// on its own when the fields land — even if the file was picked first.
+// A ref, so auto-matching re-runs when the fields land.
 const activeFields = ref<SchemaField[]>(contactFields);
 const schemaLoading = ref(false);
 let schemaTimer: ReturnType<typeof setTimeout> | undefined;
@@ -675,7 +673,7 @@ watch(fieldsSource, (mode) => {
     }
 });
 
-// Keep transform and output="mapping" mutually exclusive in the UI too
+// transform and output="mapping" are mutually exclusive.
 watch(outputMode, () => clearOutput());
 
 onMounted(() => {
@@ -717,7 +715,7 @@ const contactTransform: TransformFn<{
     };
 };
 
-// A plain function — the same shape a zod schema or a backend call would take.
+// The same shape a zod schema or a backend call would take.
 const validateContacts: RowValidator = (rows) => {
     const seenIds = new Set<string>();
     return rows.flatMap((row, index) => {
@@ -743,8 +741,7 @@ const positionalMatcher: MatcherFn = (columns, fields) => {
     return map;
 };
 
-// Deliberately broken: claims the same field for every column. Exists to show
-// that validate() refuses it instead of letting toRows() drop the data.
+// Claims the same field for every column, so validate() rejects it.
 const duplicatingMatcher: MatcherFn = (columns, fields) => {
     const first = fields[0];
     if (!first) return new Map<number, string>();
@@ -884,8 +881,7 @@ const handlerSnippet = computed(() => {
     if (outputMode.value === 'mapping') {
         return `import type { MappingOutput } from '@dazzadev/vue-sheet-mapper';
 
-// The library never issues a request and never builds a FormData.
-// You get three primitives, so any backend works — this one happens to be Laravel.
+// Three primitives, so any backend works. This one is Laravel.
 async function onMapped(payload: MappingOutput) {
     const body = new FormData();
     body.append('file', payload.file);
@@ -910,8 +906,7 @@ function onMapped(results: MappedResult[]) {
 }`;
 });
 
-// Sidebar snippets are deliberately narrow — they render inside a ~300px
-// column. The full-width versions live in the "Code" tab.
+// Narrow: these render inside the ~300px sidebar column.
 
 const reactiveFieldsSnippet = `const fields = ref<SchemaField[]>([]);
 
@@ -1073,7 +1068,7 @@ function formatBytes(bytes: number): string {
     --d-code-bg: #1e1e2e;
     --d-code-fg: #cdd6f4;
 
-    /* Chrome is dark in every theme — it is the tool, not the content. */
+    /* Chrome stays dark in every theme. */
     --d-chrome: #16181d;
     --d-chrome-line: #262a33;
     --d-chrome-text: #e6e9ef;
@@ -1090,7 +1085,7 @@ function formatBytes(bytes: number): string {
     --d-tabs-h: 48px;
 }
 
-/* The dark palette lives in one place; both selectors below pull it in. */
+/* Dark palette, shared by the media query and the explicit toggle. */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
         --d-bg: #0d0f13;
@@ -1121,8 +1116,7 @@ function formatBytes(bytes: number): string {
     --d-code-fg: #cdd6f4;
 }
 
-/* The library is themed through its own custom properties — the demo doubles
-   as proof that a dark skin needs no component changes. */
+/* The library is themed through its own custom properties. */
 :root[data-theme='dark'] .vsm,
 :root[data-theme='dark'] .stage {
     color-scheme: dark;
@@ -1271,8 +1265,7 @@ body {
     border: 0;
 }
 
-/* Dark skin for the library, applied purely through its public custom
-   properties — no component code is involved. */
+/* Dark skin for the library, through its public custom properties. */
 :root[data-theme='dark'] .stage .vsm {
     --vsm-text-color: #e6e9ef;
     --vsm-muted-color: #98a2b3;
@@ -1399,8 +1392,7 @@ body {
 }
 
 .sidebar {
-    /* Redefining the shared tokens here is what makes every nested control —
-       PanelGroup, SegControl, selects — go dark without touching their CSS. */
+    /* Redefines the shared tokens so every nested control follows. */
     --d-surface: var(--d-chrome);
     --d-line: var(--d-chrome-line);
     --d-text: var(--d-chrome-text);

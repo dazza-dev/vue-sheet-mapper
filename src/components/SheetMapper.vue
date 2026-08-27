@@ -168,8 +168,7 @@ const props = withDefaults(
         locale: 'en',
         output: 'rows',
         maxIssuesShown: 50,
-        // Vue casts an absent Boolean prop to false, so this has to be explicit —
-        // otherwise the mapper always starts in "no headers" mode.
+        // Explicit because Vue casts an absent Boolean prop to false.
         defaultHasHeaders: true,
     },
 );
@@ -216,8 +215,7 @@ const {
     issueRow,
     reset,
 } = useSheetMapper(() => props.fields, {
-    // Getters, not values: a plain object literal would freeze each prop at its
-    // mount-time value and later changes would be ignored without a trace.
+    // Getters, so the composable sees the current prop value on every read.
     get previewRows() { return props.previewRows; },
     columnLabel: (i) => msgs.value.columns.columnFallback.replace('{n}', String(i + 1)),
     get matcher() { return props.matcher; },

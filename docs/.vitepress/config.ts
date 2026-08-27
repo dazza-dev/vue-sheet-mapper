@@ -6,11 +6,8 @@ const { version } = JSON.parse(readFileSync(resolve(__dirname, '../../package.js
 
 const REPO = 'https://github.com/dazza-dev/vue-sheet-mapper';
 
-/** The demo owns the Pages root and is linked from npm, so the docs live one
- *  level down rather than taking that published URL away from it.
- *
- *  Adding a language means a folder under docs/, an entry here, and nothing
- *  means a folder under docs/, an entry in `locales`, and nothing else. */
+/** The demo owns the Pages root; the docs live under /docs/.
+ *  A new language is a folder under docs/ plus an entry in `locales`. */
 const versionMenu = {
     text: `v${version}`,
     items: [

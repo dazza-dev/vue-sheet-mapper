@@ -92,8 +92,7 @@ defineExpose({ open });
 </script>
 
 <style scoped>
-/* Visually hidden but still focusable and announced: display:none would drop
-   the input out of the accessibility tree entirely. */
+/* Visually hidden, still focusable and in the accessibility tree. */
 .vsm-dropzone__input {
     position: absolute;
     width: 1px;

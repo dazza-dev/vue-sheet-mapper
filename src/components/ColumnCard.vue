@@ -122,7 +122,7 @@ const cardClass = computed(() => ({
     'vsm-card--assigned': props.column.assignedKey !== null && props.column.assignedKey !== 'ignore',
 }));
 
-/** Names the card in a list, so its state is announced without reading inside it. */
+/** Accessible name for the card: the column and its current state. */
 const cardLabel = computed(() => {
     const name = props.column.name || '—';
     if (props.column.assignedKey === null) return `${name} — ${props.messages.columns.unassigned}`;

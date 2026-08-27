@@ -21,7 +21,7 @@ hero:
 
 features:
   - title: Excel & CSV
-    details: Reads .xlsx, .xls and .csv. Encoding is detected, so a UTF-8 file without a byte order mark no longer arrives garbled.
+    details: Reads .xlsx, .xls and .csv. The text encoding is detected, so UTF-8 without a byte order mark, UTF-16 and Windows-1252 all arrive intact.
   - title: Auto-matching
     details: Columns are matched against each field's key, label and aliases, ignoring accents. Replace the algorithm entirely when you need to.
   - title: Reactive schemas

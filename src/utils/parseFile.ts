@@ -31,13 +31,8 @@ function isBinaryWorkbook(bytes: Uint8Array): boolean {
 }
 
 /**
- * SheetJS honours a byte order mark but falls back to Windows-1252 for text
- * without one, and cannot read UTF-16 at all. Most tools other than Excel for
- * Windows emit UTF-8 without a BOM, so decode here instead.
- *
- * A byte sequence that decodes as strict UTF-8 is UTF-8 in practice: for
- * Windows-1252 text to pass, every high byte would have to land inside a valid
- * multi-byte sequence.
+ * Decodes a text file: byte order mark first, then an explicit label, then
+ * strict UTF-8, falling back to Windows-1252.
  */
 function decodeText(bytes: Uint8Array, encoding?: string): string {
     if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder('utf-16le').decode(bytes);
