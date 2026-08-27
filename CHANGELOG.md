@@ -5,33 +5,59 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] — 2026-08-27
 
-### Fixed
-
-- **`validate()` now rejects duplicate assignments.** `assignField` already
-  prevented one field from being claimed by two columns, but a custom `matcher`
-  could return a `Map` that did. Validation passed, and `toRows()` then collapsed
-  the two into one, silently dropping a column's data. It fails with the new
-  `DUPLICATE_ASSIGNMENTS` code instead, listing every duplicated field.
+Correctness and accessibility. Two changes are visible without touching any
+code: one schema property is renamed, and the default colours are darker
+because the old ones did not meet contrast requirements.
 
 ### Breaking changes
 
 - **`SchemaField.required` is now `SchemaField.requireColumn`.** The flag has
   always checked whether a column is mapped to the field, never whether a row
-  carries a value — a blank cell in a required field passed validation. Every
-  schema library spells the row-level question `required`, so the old name
-  promised a check the library does not perform. Rename the property in your
-  schemas; nothing else changes. The new README section draws the line between
-  mapping checks and record checks.
+  carries a value — a blank cell in a "required" field passes validation and
+  reaches `@mapped` as an empty string. Every schema library spells the
+  row-level question `required`, so the old name promised a check this library
+  does not perform. Rename the property in your schemas; nothing else changes.
+- **The default palette is darker.** All four colours fell below the WCAG AA
+  contrast ratio of 4.5:1 on white — `primary` 3.68, `success` 3.30, `danger`
+  3.76, `warning` 3.19 — so any text painted with them failed out of the box.
+  They now sit at 5.17, 5.02, 4.83 and 5.02. The stock appearance changes for
+  anyone who does not override the CSS custom properties.
+
+### Added
+
+- **`DUPLICATE_ASSIGNMENTS`** error code, with `duplicateFields` on the error,
+  raised when one field is claimed by more than one column.
+
+### Fixed
+
+- **`validate()` rejects duplicate assignments.** `assignField` already
+  prevented them, but a custom `matcher` could return a `Map` that did not.
+  Validation passed and `toRows()` collapsed the two columns into one, silently
+  dropping a column's data.
+- **Props reaching the composable are live again.** `matcher`, `previewRows`,
+  `columnLabel` and `defaultHasHeaders` were captured once at setup, so changing
+  any of them after mount was ignored without a trace.
+- **Accessibility gaps.** The file input sat behind `display: none`, which drops
+  it out of the accessibility tree entirely, and carried no accessible name; the
+  drop area announced nothing; the column cards were an unlabelled pile of divs
+  rather than a list; decorative icons were exposed to screen readers.
+- **`.vsm-btn--secondary` hardcoded `#fff`** instead of going through
+  `--vsm-card-bg`, so it stayed white under a dark skin.
+- **`getMessages` blanked base strings.** An override key whose value was
+  `undefined` overwrote the locale's string rather than leaving it alone.
 
 ### Changed
 
 - **The `xlsx` peer range is now `>=0.18.0`** (was `^0.18.0`), so the patched
   SheetJS builds distributed outside npm satisfy it. The npm release of `xlsx`
   is stuck at `0.18.5` and carries two unfixed high-severity advisories; the
-  README's new Security section explains what to install and why. Verified
-  against SheetJS 0.20.3 — the whole suite passes unchanged.
+  README's Security section explains what to install and why. Verified against
+  SheetJS 0.20.3 — the whole suite passes unchanged.
+- Removed 39 `var()` fallbacks from the component CSS. Every `--vsm-*` variable
+  is declared on `.vsm`, so none could ever fire, and eight had drifted from the
+  value actually in use.
 
 ## [2.0.1] — 2026-08-26
 
@@ -146,6 +172,7 @@ The 2.0.0 reactive-schema and headless-helper work started as a contribution fro
 [@partprogramming09](https://github.com/partprogramming09) in
 [#1](https://github.com/dazza-dev/vue-sheet-mapper/pull/1).
 
+[3.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v3.0.0
 [2.0.1]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v2.0.1
 [2.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v2.0.0
 [1.0.0]: https://github.com/dazza-dev/vue-sheet-mapper/releases/tag/v1.0.0

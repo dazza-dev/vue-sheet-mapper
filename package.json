@@ -1,6 +1,6 @@
 {
   "name": "@dazzadev/vue-sheet-mapper",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Vue 3 component for mapping Excel/CSV columns to a schema",
   "author": "Andres Daza (https://github.com/dazza-dev)",
   "license": "MIT",
