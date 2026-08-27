@@ -170,6 +170,8 @@ function onMapped(results: MappedResult[]) {
 | `autoConfirm`       | `boolean`                              | `false` | Emit `@mapped` immediately if all columns are valid after auto-matching, without showing the confirm button. |
 | `maxFileSize`       | `number`                               | —       | Maximum file size in bytes. Files larger than this are rejected before parsing.                              |
 | `maxRows`           | `number`                               | —       | Maximum number of data rows allowed. Files with more rows are rejected after parsing.                        |
+| `validateRows`      | `RowValidator`                         | —       | Checks the mapped rows and reports problems. Runs after the mapping checks pass; blocks `@mapped` when it returns anything. |
+| `maxIssuesShown`    | `number`                               | `50`    | How many problems to list at once.                                                                           |
 | `encoding`          | `string`                               | —       | `TextDecoder` label (e.g. `'shift-jis'`) forcing the encoding of CSV/text files. Detected automatically when omitted; ignored for `.xlsx` and `.xls`. |
 
 ---
@@ -182,6 +184,7 @@ function onMapped(results: MappedResult[]) {
 | `@error`          | `SheetMapperError`                                | Emitted when a file or validation error occurs.                                                                                   |
 | `@file-picked`    | `File`                                            | Emitted immediately when the user selects a file, before parsing.                                                                 |
 | `@columns-loaded` | `{ name: string; assignedKey: string \| null }[]` | Emitted after the file is parsed and columns are shown. Includes the detected column names and their initial auto-match result.   |
+| `@invalid`        | `RowIssue[]`                                      | Emitted instead of `@mapped` when `validateRows` reports problems.                                                                |
 | `@reset`          | —                                                 | Emitted when the user clicks "change file" and returns to the dropzone.                                                           |
 
 ---
@@ -688,6 +691,79 @@ function onMapped(results: MappedResult[]) {
 
 ---
 
+### Validating the data
+
+`validate()` checks the mapping. To check the values, pass `validateRows`.
+
+The library never inspects a value itself, and never will: rules are yours.
+Bring [zod](https://zod.dev), yup, a plain function or your own backend — the
+library only routes what you report back to the right row.
+
+```typescript
+import type { RowValidator } from "@dazzadev/vue-sheet-mapper";
+
+const validateRows: RowValidator = (rows) =>
+  rows.flatMap((row, index) => {
+    const result = schema.safeParse(row);
+    return result.success
+      ? []
+      : result.error.issues.map((issue) => ({
+          index,
+          field: String(issue.path[0]),
+          message: issue.message,
+        }));
+  });
+```
+
+```vue
+<SheetMapper :fields="fields" :validate-rows="validateRows" @invalid="onInvalid" />
+```
+
+Every row arrives at once, rather than one call per row, because that is what
+cross-row rules and remote checks need:
+
+```typescript
+// A duplicate is invisible from inside a single row
+const validateRows: RowValidator = (rows) => {
+  const seen = new Set<string>();
+  return rows.flatMap((row, index) =>
+    seen.has(row.id) ? [{ index, field: "id", message: "Duplicate" }] : (seen.add(row.id), []),
+  );
+};
+
+// One request, not one per row
+const validateRows: RowValidator = (rows) =>
+  fetch("/api/import/check", { method: "POST", body: JSON.stringify(rows) }).then((r) => r.json());
+```
+
+Return an empty array when the data is fine and `@mapped` fires as usual.
+Return anything and the component lists the problems, fires `@invalid` instead,
+and lets the user fix the file and try again.
+
+#### `RowIssue`
+
+```typescript
+interface RowIssue {
+  index: number; // position in the rows array you received, 0-based
+  field?: string; // schema field key, used to name the column
+  message: string; // shown to the user, already in their language
+}
+```
+
+Report `index` — the position in the array you were handed. The component
+resolves it to the row number the user sees in their spreadsheet, which depends
+on whether row 1 is a header, and shows *"Row 22"*. That translation is the part
+you cannot easily rebuild outside the component.
+
+#### This is not a replacement for server-side validation
+
+Anything running in the browser can be bypassed by calling your API directly, so
+keep validating on the server. What this buys you is *when* the user finds out:
+with the file still open in front of them, instead of in an error report an hour
+later.
+
+---
+
 ## Output modes
 
 `output` decides what `@mapped` hands you.
@@ -1029,6 +1105,8 @@ After registering the plugin, `<SheetMapper>` is available globally without impo
 | `Locale`               | Type       | `'en' \| 'es' \| 'fr' \| 'pt' \| 'nl'`          |
 | `Icons`                | Type       | Icon override map                               |
 | `MatcherFn`            | Type       | Custom matcher function signature               |
+| `RowValidator`         | Type       | Data validation hook signature                  |
+| `RowIssue`             | Type       | One problem reported by a `RowValidator`        |
 | `TransformFn`          | Type       | Row transform function signature                |
 
 ---

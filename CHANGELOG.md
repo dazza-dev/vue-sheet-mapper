@@ -5,6 +5,28 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`validateRows` — a hook for checking the data, not just the mapping.** The
+  library still inspects no values of its own: it hands every mapped row to your
+  function and routes what you report back to the right row. zod, yup, a plain
+  function or a call to your backend all fit the same signature.
+
+  Rows arrive as one batch rather than one call each, so cross-row rules
+  (duplicate ids) and batched remote checks are possible; per-row is a `flatMap`
+  away. The hook may return a promise.
+
+  When it reports anything, the component lists the problems against the row
+  number the user sees in their spreadsheet — the translation from array
+  position to spreadsheet row is what the library is uniquely placed to do —
+  fires the new `@invalid` event, and holds back `@mapped`.
+
+  Also adds the `RowIssue` and `RowValidator` types, the `maxIssuesShown` prop,
+  an `issues` slot, and `issues` / `checkingRows` / `checkRows` / `issueRow` on
+  the composable.
+
 ## [3.0.0] — 2026-08-27
 
 Correctness and accessibility. Two changes are visible without touching any
