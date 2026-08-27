@@ -1,4 +1,4 @@
-name: Deploy demo to GitHub Pages
+name: Deploy demo and docs to GitHub Pages
 
 on:
   push:
@@ -35,11 +35,23 @@ jobs:
       - name: Build demo
         run: pnpm run build:demo
 
+      - name: Build docs
+        run: pnpm run docs:build
+
+      # The demo keeps the Pages root because npm and the release notes already
+      # link to it; the docs sit one level down.
+      - name: Combine into one site
+        run: |
+          mkdir -p site
+          cp -r demo-dist/. site/
+          mkdir -p site/docs
+          cp -r docs/.vitepress/dist/. site/docs/
+
       - uses: actions/configure-pages@v4
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: demo-dist
+          path: site
 
       - uses: actions/deploy-pages@v4
         id: deployment
